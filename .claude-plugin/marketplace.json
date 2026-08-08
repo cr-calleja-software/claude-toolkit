@@ -1,0 +1,16 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "claude-toolkit",
+  "version": "0.1.0",
+  "description": "Clint's personal Claude Code toolkit for cr-calleja-software projects",
+  "owner": {
+    "name": "Clint Calleja"
+  },
+  "plugins": [
+    {
+      "name": "personal-projects",
+      "description": "GitHub workflow commands (create-issue, ship-issue, code-review, frontend-design-audit) and an seo-audit skill, generic across repos and configured per-project via .claude/project.md",
+      "source": "./plugins/personal-projects"
+    }
+  ]
+}
