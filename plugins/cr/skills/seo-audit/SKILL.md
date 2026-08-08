@@ -50,7 +50,9 @@ Favour the dedicated search/read tools (Glob, Grep, Read) — this is a fast sca
 not a build.
 
 ### 1. Metadata
+
 The foundation for search snippets and social link previews.
+
 - `app/layout.tsx` — root `metadata`: `metadataBase` (must resolve to the real
   production origin, not `localhost` — check the actual deploy target from
   `project.md`, not just a `VERCEL_*` fallback if the project deploys elsewhere),
@@ -63,7 +65,9 @@ The foundation for search snippets and social link previews.
 - `app/manifest.ts` — name, icons, theme colour.
 
 ### 2. Crawlability
+
 Whether search engines can find and traverse the site.
+
 - `app/sitemap.ts` (or `public/sitemap.xml`) — exists? Does it enumerate every
   indexable route, including dynamic entity pages? If the entity count is
   unbounded/user-generated, this must be generated from the data source, not
@@ -75,9 +79,11 @@ Whether search engines can find and traverse the site.
 - Canonical URLs — set per route, absolute, on the production origin?
 
 ### 3. Structured data (schema.org JSON-LD)
+
 This is the highest-leverage area for both Google rich results and LLM parsing.
+
 - Search for any `application/ld+json` script or JSON-LD helper (`grep -ri
-  'ld+json\|jsonld\|@context' app components lib`).
+'ld+json\|jsonld\|@context' app components lib`).
 - Expected type(s) depend on the project's data model (`context_doc`) — e.g.
   `Article`/`SocialMediaPosting` for user content, `Event` for scheduled
   events, `Product` for listings — plus site-level `WebSite`/`Organization`.
@@ -87,9 +93,11 @@ This is the highest-leverage area for both Google rich results and LLM parsing.
   confirm structured data never exposes more than what was chosen/collected.
 
 ### 4. Indexable surface
+
 How many things this site can actually rank for.
+
 - Count distinct indexable routes (static + dynamic).
-- Compare against the data source — how many entities *could* have their own
+- Compare against the data source — how many entities _could_ have their own
   page but don't? If the dataset grows over time, check the sitemap/route
   generation actually scales with it rather than being capped or paginated in
   a way that hides older entities from crawlers.
@@ -97,7 +105,9 @@ How many things this site can actually rank for.
   users) can reach them?
 
 ### 5. AI/LLM discoverability
+
 What makes ChatGPT, Perplexity, and AI Overviews able to cite the site.
+
 - Structured data quality (covered above) is the biggest factor.
 - `public/llms.txt` — present? (An emerging convention for guiding LLM crawlers.)
 - Semantic HTML and descriptive headings — is content in real
@@ -106,7 +116,9 @@ What makes ChatGPT, Perplexity, and AI Overviews able to cite the site.
   client JS? Server components are good here.
 
 ### 6. Performance & mobile signals (lightweight)
+
 These influence ranking but only need a quick pass — don't profile.
+
 - Mobile-first: does the app render sensibly at the project's mobile baseline?
 - Images: optimised-image-component usage, explicit dimensions, lazy loading.
 - Obvious render-blocking or oversized assets.
@@ -144,6 +156,7 @@ Use High / Medium / Low for both Impact and Effort. Order the table by impact,
 then by lowest effort. Keep the "Why" to one line — concrete, tied to this app.
 
 ## Notes
+
 - Don't invent gaps to pad the list. If an area is genuinely solid, say so with ✅
   and move on — a short honest audit beats a long speculative one.
 - If you find an existing tracking issue/epic for a gap, note it next to the
