@@ -6,22 +6,29 @@ repos) stop copy-pasting `.claude/commands/*.md`.
 
 ## Install (per machine, one-time)
 
-Requires the `claude` CLI. Register this repo as a marketplace:
+Requires the `claude` CLI and access to the private
+[`cr-calleja-software/claude-toolkit`](https://github.com/cr-calleja-software/claude-toolkit)
+repo. Register it as a marketplace:
 
 ```bash
-claude plugin marketplace add /Users/clintcalleja/Development/Personal/claude-toolkit
+claude plugin marketplace add https://github.com/cr-calleja-software/claude-toolkit
 ```
 
 This writes the marketplace registration into your **user-level**
-`~/.claude/settings.json` — do it once per machine, not once per project. If
-you ever move or rename this repo, re-run the same command with the new path
-(or `claude plugin marketplace remove claude-toolkit` first if the old path no
-longer exists).
+`~/.claude/settings.json` — do it once per machine, not once per project.
+
+**If you're actively developing this toolkit** (editing commands/skills),
+register it from a local clone instead, so edits are picked up on the next
+Claude Code session without needing to push/pull first:
+
+```bash
+claude plugin marketplace add /path/to/your/local/claude-toolkit
+```
 
 Confirm it registered:
 
 ```bash
-claude plugin marketplace list   # should list "claude-toolkit — Directory (<path>)"
+claude plugin marketplace list   # should list "claude-toolkit"
 ```
 
 ## Set up a project to use this toolkit
@@ -167,10 +174,11 @@ all the work happens in the new repo.
       failure handling in the project-board step, and the `seo-audit` →
       `/cr:create-issue` cross-reference.
 - [x] Wrote `.claude/project.md` for `festa-tracker`, `good-news`, `lanca-mt`
-- [x] `claude plugin marketplace add` this repo locally
+- [x] Renamed the plugin `personal-projects` → `cr` (shorter `/cr:` invocation
+      prefix)
 - [x] Enabled the plugin in each project's `.claude/settings.json` (project
       scope, `--scope project`), deleted their local
       `.claude/commands/*.md` + `.claude/skills/seo-audit`
       — committed on a `chore/add-claude-project-md` branch in each repo,
-      not yet pushed
-- [ ] Decide: push this repo to GitHub, or keep it local-only for now
+      PRs open
+- [x] Pushed to GitHub — private, `cr-calleja-software/claude-toolkit`
