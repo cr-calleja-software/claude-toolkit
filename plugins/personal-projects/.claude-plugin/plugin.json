@@ -1,5 +1,9 @@
 {
   "name": "personal-projects",
   "description": "GitHub workflow commands and audits for cr-calleja-software projects, configured per-project via .claude/project.md",
-  "version": "0.1.0"
+  "version": "0.1.0",
+  "author": {
+    "name": "Clint Calleja",
+    "email": "clint.calleja@gmail.com"
+  }
 }
