@@ -13,7 +13,7 @@ Thorough code review of the current branch diff against `main`. Checks correctne
 ## Usage
 
 ```
-/code-review [--pr <number>] [--fix] [--comment]
+/cr:code-review [--pr <number>] [--fix] [--comment]
 ```
 
 - `--pr <number>` — review a specific open PR instead of the local diff

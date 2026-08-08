@@ -19,7 +19,7 @@ and AI assistants, then hands back a prioritised list of fixes.
 
 The point is repeatability: instead of re-deriving the SEO checklist by hand each
 time, run this to get a consistent state-of-play and a ranked set of next steps.
-It is the natural companion to `/create-issue` — audit first, then file the
+It is the natural companion to `/cr:create-issue` — audit first, then file the
 high-impact gaps.
 
 ## Config
@@ -36,7 +36,7 @@ before this skill can run.
 
 **This skill is read-only.** Audit and recommend only. Do not edit app code, do
 not create files, do not open GitHub issues. The deliverable is a report in the
-chat. If the user wants to act on a finding, point them at `/create-issue`.
+chat. If the user wants to act on a finding, point them at `/cr:create-issue`.
 
 Keep it grounded in what's actually in the repo. Every finding must cite the real
 file (or its absence) — `app/layout.tsx:23`, "no `app/sitemap.ts`", etc. Don't
@@ -137,7 +137,7 @@ weighed against effort.
 | 2 | ... | ... | ... | ... |
 
 ## Suggested next step
-One line, e.g. "File the high-impact items with /create-issue."
+One line, e.g. "File the high-impact items with /cr:create-issue."
 ```
 
 Use High / Medium / Low for both Impact and Effort. Order the table by impact,

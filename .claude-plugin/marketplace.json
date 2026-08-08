@@ -8,9 +8,9 @@
   },
   "plugins": [
     {
-      "name": "personal-projects",
-      "description": "GitHub workflow commands (create-issue, ship-issue, code-review, frontend-design-audit) and an seo-audit skill, generic across repos and configured per-project via .claude/project.md",
-      "source": "./plugins/personal-projects"
+      "name": "cr",
+      "description": "GitHub workflow commands (create-issue, ship-issue, code-review, frontend-design-audit) and an seo-audit skill, generic across cr-calleja-software repos and configured per-project via .claude/project.md",
+      "source": "./plugins/cr"
     }
   ]
 }

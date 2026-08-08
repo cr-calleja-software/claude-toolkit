@@ -32,9 +32,9 @@ Run these from inside the **consuming** repo (e.g. `good-news`), not this one.
    below. Every command in this plugin reads it; nothing works without it.
 2. **Enable the plugin** for that project:
    ```bash
-   claude plugin install personal-projects@claude-toolkit --scope project
+   claude plugin install cr@claude-toolkit --scope project
    ```
-   `--scope project` writes `"enabledPlugins": {"personal-projects@claude-toolkit": true}`
+   `--scope project` writes `"enabledPlugins": {"cr@claude-toolkit": true}`
    into that repo's `.claude/settings.json` (committed, same pattern as an
    existing `frontend-design@claude-plugins-official` entry if there is one).
    Equivalent to editing that file by hand if you'd rather not use the CLI.
@@ -46,23 +46,30 @@ Run these from inside the **consuming** repo (e.g. `good-news`), not this one.
    git rm -r .claude/skills/seo-audit   # only if present
    ```
 4. **Start a new Claude Code session** in that repo (plugins load at session
-   start) and sanity-check with `/create-issue` or `/code-review` — it should
-   read the `.claude/project.md` you just wrote rather than erroring or
-   falling back to generic behaviour.
+   start) and sanity-check with `/cr:create-issue` or `/cr:code-review` — it
+   should read the `.claude/project.md` you just wrote rather than erroring
+   or falling back to generic behaviour.
 5. Commit `.claude/project.md` and the `.claude/settings.json` change on a
    branch and open a PR, same as any other change to that repo.
 
-## What's in `plugins/personal-projects`
+## What's in `plugins/cr`
 
-- `commands/create-issue.md` — draft + file a GitHub issue
-- `commands/ship-issue.md` — implement an issue end-to-end (branch → PR → review request)
-- `commands/code-review.md` — review the local diff or a PR
-- `commands/frontend-design-audit.md` — UI/UX audit of frontend changes
-- `skills/seo-audit/SKILL.md` — read-only SEO/LLM-discoverability audit
+- `commands/create-issue.md` → invoked as `/cr:create-issue` — draft + file a GitHub issue
+- `commands/ship-issue.md` → invoked as `/cr:ship-issue` — implement an issue end-to-end (branch → PR → review request)
+- `commands/code-review.md` → invoked as `/cr:code-review` — review the local diff or a PR
+- `commands/frontend-design-audit.md` → invoked as `/cr:frontend-design-audit` — UI/UX audit of frontend changes
+- `skills/seo-audit/SKILL.md` — read-only SEO/LLM-discoverability audit, surfaced automatically (not slash-invoked)
 
 All five are **generic** — no repo name, org, project-board ID, or product
 checklist is hardcoded. Each one starts by reading `.claude/project.md` in the
 consuming repo.
+
+Note the `cr:` prefix on the commands: Claude Code always namespaces
+plugin-provided slash commands as `<plugin-name>:<command>` to avoid
+collisions with other plugins (there's already an unrelated `code-review`
+plugin in the official marketplace) — it's mandatory, not something we
+opted into, and the only way to change it is renaming the plugin itself
+(the `name` field in `plugin.json`).
 
 ## The `.claude/project.md` contract
 
@@ -80,7 +87,7 @@ project_board:                    # omit this whole key if there's no board
   number: 5
   owner: cr-calleja-software       # org login used with `gh project item-add --owner`
   url: https://github.com/orgs/cr-calleja-software/projects/5/views/1
-  project_id: PVT_kwDOEV0uKc4Beepu           # optional — only if you want /ship-issue to move the card between statuses
+  project_id: PVT_kwDOEV0uKc4Beepu           # optional — only if you want /cr:ship-issue to move the card between statuses
   field_id: PVTSSF_lADOEV0uKc4BeepuzhY4izk   # optional, required alongside project_id
   options: {in_progress: 47fc9ee4, in_review: df73e18b}  # optional, required alongside field_id
 ---
@@ -90,21 +97,21 @@ project_board:                    # omit this whole key if there's no board
 any open product questions that should block silent assumptions>
 
 ## Review checklist
-<project-specific bullets /code-review checks for, beyond the generic dimensions>
+<project-specific bullets /cr:code-review checks for, beyond the generic dimensions>
 
 ## Design checklist
-<project-specific bullets /frontend-design-audit checks for>
+<project-specific bullets /cr:frontend-design-audit checks for>
 
 ## How to test
-<boilerplate steps /ship-issue puts at the top of a PR's "How to test" section>
+<boilerplate steps /cr:ship-issue puts at the top of a PR's "How to test" section>
 
 ## Stack notes
-<optional — stack facts/file pointers /create-issue and /ship-issue can lean on>
+<optional — stack facts/file pointers /cr:create-issue and /cr:ship-issue can lean on>
 ```
 
-If `project_board.project_id`/`field_id`/`options` are omitted, `/ship-issue`
+If `project_board.project_id`/`field_id`/`options` are omitted, `/cr:ship-issue`
 skips moving the card between statuses (Steps 3.5/7.5) and only relies on
-`/create-issue` having added it to the board in the first place.
+`/cr:create-issue` having added it to the board in the first place.
 
 ## Contributing
 
@@ -115,13 +122,13 @@ not in the command file here. Before editing a command, check whether what
 you're adding is actually generic or actually project-specific.
 
 **Editing an existing command or skill**
-1. Edit the file under `plugins/personal-projects/commands/` or `skills/`.
+1. Edit the file under `plugins/cr/commands/` or `skills/`.
 2. Validate the manifests still pass:
    ```bash
    claude plugin validate .claude-plugin/marketplace.json --strict
-   claude plugin validate plugins/personal-projects --strict
+   claude plugin validate plugins/cr --strict
    ```
-3. Bump `version` in `plugins/personal-projects/.claude-plugin/plugin.json` —
+3. Bump `version` in `plugins/cr/.claude-plugin/plugin.json` —
    patch for wording/prompt tweaks, minor for a new command/skill or a new
    optional `project.md` field, major for a breaking change to the
    `project.md` contract (one that would silently misbehave against an
@@ -158,7 +165,7 @@ all the work happens in the new repo.
       across the three source repos as of 2026-08-08), folding in two things
       `festa-tracker`/`lanca-mt` had that `good-news` didn't: robust `gh` CLI
       failure handling in the project-board step, and the `seo-audit` →
-      `/create-issue` cross-reference.
+      `/cr:create-issue` cross-reference.
 - [x] Wrote `.claude/project.md` for `festa-tracker`, `good-news`, `lanca-mt`
 - [x] `claude plugin marketplace add` this repo locally
 - [x] Enabled the plugin in each project's `.claude/settings.json` (project

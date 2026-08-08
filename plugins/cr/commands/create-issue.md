@@ -1,10 +1,10 @@
 ---
-description: Turn a rough thought into a well-scoped GitHub issue that /ship-issue can implement
+description: Turn a rough thought into a well-scoped GitHub issue that /cr:ship-issue can implement
 ---
 
 # create-issue
 
-Turn a rough thought into a well-scoped GitHub issue that an agent can pick up and run `/ship-issue` against successfully.
+Turn a rough thought into a well-scoped GitHub issue that an agent can pick up and run `/cr:ship-issue` against successfully.
 
 > **Prerequisite:** requires the GitHub MCP server (`mcp__github__*` tools) to be configured. If it is not connected, run `/mcp` → authenticate **github** first, or these steps will fail.
 >
@@ -13,13 +13,13 @@ Turn a rough thought into a well-scoped GitHub issue that an agent can pick up a
 ## Usage
 
 ```
-/create-issue <rough description of what you want>
+/cr:create-issue <rough description of what you want>
 ```
 
 **Examples:**
-- `/create-issue submitters should be able to preview their story before the final post step`
-- `/create-issue map pins overlap when a lot of stories are clustered in one city`
-- `/create-issue` (no args — I'll ask you what the issue is about)
+- `/cr:create-issue submitters should be able to preview their story before the final post step`
+- `/cr:create-issue map pins overlap when a lot of stories are clustered in one city`
+- `/cr:create-issue` (no args — I'll ask you what the issue is about)
 
 ---
 
@@ -29,7 +29,7 @@ You are drafting a GitHub issue from the user's request: **$ARGUMENTS**
 
 Read `.claude/project.md` first. It has YAML frontmatter (`owner`, `repo`, `context_doc`, `reviewers`, `project_board`) and markdown sections (`## Scope`, `## Review checklist`, `## Design checklist`, `## How to test`, `## Stack notes`). Use `owner`/`repo` from its frontmatter in every `mcp__github__*` call below — do not hardcode them.
 
-The goal is an issue with **exactly the right amount of detail** — enough that an agent running `/ship-issue` can implement it correctly without guessing, but not so much that it over-specifies the solution or invents requirements the user never asked for. Match the level of detail to the size of the change.
+The goal is an issue with **exactly the right amount of detail** — enough that an agent running `/cr:ship-issue` can implement it correctly without guessing, but not so much that it over-specifies the solution or invents requirements the user never asked for. Match the level of detail to the size of the change.
 
 ### Step 1 — Understand the request
 
@@ -137,4 +137,4 @@ Print a short summary:
 ✓ Board:   added to <project name/number>, status: <status>  |  not added (<reason>)  |  n/a (no board configured)
 ```
 
-Then offer the natural next step: `Run /ship-issue <number> to implement it.`
+Then offer the natural next step: `Run /cr:ship-issue <number> to implement it.`

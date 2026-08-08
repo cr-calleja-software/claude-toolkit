@@ -6,14 +6,14 @@ description: UI/UX design audit for frontend changes, with project-specific chec
 
 UI/UX design audit for any frontend change. Run this **automatically after implementing any frontend code** (new pages, components, layout changes). Produces a structured audit report and — if issues are found — applies fixes before committing.
 
-> **When to invoke:** Any time frontend code is written or modified (components, pages, styling, layout). Also available on demand as `/frontend-design-audit`.
+> **When to invoke:** Any time frontend code is written or modified (components, pages, styling, layout). Also available on demand as `/cr:frontend-design-audit`.
 >
 > **Config:** this command reads `.claude/project.md` at the repo root for `owner`/`repo` and the project-specific `## Design checklist`. If that file is missing, stop and tell the user it needs to exist before this command can run.
 
 ## Usage
 
 ```
-/frontend-design-audit [--fix] [--pr <number>]
+/cr:frontend-design-audit [--fix] [--pr <number>]
 ```
 
 - `--fix` — apply recommended fixes to the working tree after auditing

@@ -13,12 +13,12 @@ Full SDLC automation: read a GitHub issue, implement the change, commit, push, o
 ## Usage
 
 ```
-/ship-issue <issue-url-or-number>
+/cr:ship-issue <issue-url-or-number>
 ```
 
 **Examples:**
-- `/ship-issue 12`
-- `/ship-issue https://github.com/<owner>/<repo>/issues/12`
+- `/cr:ship-issue 12`
+- `/cr:ship-issue https://github.com/<owner>/<repo>/issues/12`
 
 ---
 
@@ -62,7 +62,7 @@ git checkout -b <branch-name> origin/main
 
 ### Step 3.5 — Move the board card to "In progress"
 
-Only if `project.md`'s `project_board` section has `project_id`, `field_id`, and an `in_progress` option id — some projects only add issues to the board (handled by `/create-issue`) without tracking per-column status. Skip this step entirely if those fields aren't present.
+Only if `project.md`'s `project_board` section has `project_id`, `field_id`, and an `in_progress` option id — some projects only add issues to the board (handled by `/cr:create-issue`) without tracking per-column status. Skip this step entirely if those fields aren't present.
 
 Best-effort — don't block the rest of the flow if this fails (e.g. the issue was never added to the board, or `gh` isn't authenticated):
 
@@ -92,10 +92,10 @@ Do the smallest implementation that fully satisfies the issue's acceptance crite
 
 ### Step 4.5 — Frontend design audit (frontend changes only)
 
-If **any** of the changed files are frontend files (components, pages, or style-heavy files), run the `/frontend-design-audit` command on the local diff **before committing**:
+If **any** of the changed files are frontend files (components, pages, or style-heavy files), run the `/cr:frontend-design-audit` command on the local diff **before committing**:
 
 ```
-/frontend-design-audit --fix
+/cr:frontend-design-audit --fix
 ```
 
 This will:
