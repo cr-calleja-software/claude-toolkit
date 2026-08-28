@@ -1,0 +1,15 @@
+{
+  "description": "Warns at session start when the consuming repo is missing the .claude/project.md every cr command reads",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks-handlers/session-start.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}

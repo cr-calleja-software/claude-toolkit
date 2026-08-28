@@ -45,19 +45,61 @@ Run these from inside the **consuming** repo (e.g. `good-news`), not this one.
    into that repo's `.claude/settings.json` (committed, same pattern as an
    existing `frontend-design@claude-plugins-official` entry if there is one).
    Equivalent to editing that file by hand if you'd rather not use the CLI.
-3. **Remove the project's old local copies**, if it has any — the plugin now
+3. **Install the web bootstrap hook** — required for Claude Code on the web,
+   a no-op locally. See "Claude Code on the web" below for why:
+   ```bash
+   mkdir -p .claude/hooks
+   cp /path/to/claude-toolkit/bootstrap/session-start.sh .claude/hooks/session-start.sh
+   chmod +x .claude/hooks/session-start.sh
+   ```
+   Then register it in that repo's `.claude/settings.json`:
+   ```json
+   "hooks": {"SessionStart": [{"hooks": [{"type": "command",
+     "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh"}]}]}
+   ```
+   Copy the file as-is — it is repo-agnostic and identical in every repo.
+4. **Remove the project's old local copies**, if it has any — the plugin now
    serves them:
    ```bash
    git rm .claude/commands/create-issue.md .claude/commands/ship-issue.md \
           .claude/commands/code-review.md .claude/commands/frontend-design-audit.md
    git rm -r .claude/skills/seo-audit   # only if present
    ```
-4. **Start a new Claude Code session** in that repo (plugins load at session
+5. **Start a new Claude Code session** in that repo (plugins load at session
    start) and sanity-check with `/cr:create-issue` or `/cr:code-review` — it
    should read the `.claude/project.md` you just wrote rather than erroring
    or falling back to generic behaviour.
-5. Commit `.claude/project.md` and the `.claude/settings.json` change on a
-   branch and open a PR, same as any other change to that repo.
+6. Commit `.claude/project.md`, `.claude/hooks/session-start.sh` and the
+   `.claude/settings.json` change on a branch and open a PR, same as any other
+   change to that repo.
+
+## Claude Code on the web
+
+Web sessions honour only half of a repo's `.claude/settings.json`:
+`enabledPlugins` resolves, but **`extraKnownMarketplaces` is ignored**. The
+`claude-toolkit` marketplace is therefore never fetched, `cr@claude-toolkit`
+cannot resolve, and the `/cr:` commands and the seo-audit skill go missing —
+with no error, which is what makes it confusing to diagnose. Plugins from
+marketplaces Claude Code already knows (`frontend-design@claude-plugins-official`)
+keep working, which is the tell.
+
+`bootstrap/session-start.sh` closes that gap. At session start it reads the
+consuming repo's own `.claude/settings.json`, registers every marketplace under
+`extraKnownMarketplaces` that isn't registered yet, and installs every enabled
+plugin that isn't installed yet.
+
+Because it is driven entirely by that file, the script is **byte-identical in
+every consuming repo** — copy it once and never edit it. Adding a marketplace or
+a plugin to `settings.json` is enough; the next session picks it up. It is also
+idempotent, guarded on `$CLAUDE_CODE_REMOTE` so local sessions keep using
+`/plugin` and its trust prompt, and it never fails a session — every failure
+path warns on stderr and exits 0.
+
+Why it can't live in this plugin: a hook shipped by the `cr` plugin only runs
+once the plugin is installed, which is the very thing the bootstrap does. Some
+entry point has to be self-contained in the consuming repo. Everything *after*
+bootstrap can and should live here instead — see
+`plugins/cr/hooks/hooks.json`.
 
 ## What's in `plugins/cr`
 
@@ -66,8 +108,13 @@ Run these from inside the **consuming** repo (e.g. `good-news`), not this one.
 - `commands/code-review.md` → invoked as `/cr:code-review` — review the local diff or a PR
 - `commands/frontend-design-audit.md` → invoked as `/cr:frontend-design-audit` — UI/UX audit of frontend changes
 - `skills/seo-audit/SKILL.md` — read-only SEO/LLM-discoverability audit, surfaced automatically (not slash-invoked)
+- `hooks/hooks.json` + `hooks-handlers/session-start.sh` — ships with the
+  plugin, so it runs in every repo that installs it with no per-repo copy.
+  Currently warns at session start when `.claude/project.md` is missing, rather
+  than letting a command fail halfway through. Shared session setup belongs
+  here; contrast `bootstrap/session-start.sh`, which each repo must copy in.
 
-All five are **generic** — no repo name, org, project-board ID, or product
+All five commands and skills are **generic** — no repo name, org, project-board ID, or product
 checklist is hardcoded. Each one starts by reading `.claude/project.md` in the
 consuming repo.
 
