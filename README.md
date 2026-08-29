@@ -139,6 +139,14 @@ does not declare (the official one) are left alone; Claude Code manages those,
 and refreshing them would slow every session start for no benefit. A cold start
 does no refresh or update work at all — everything is a fresh add and install.
 
+When something is out of its reach it says so rather than going quiet. A plugin
+enabled in `settings.json` whose marketplace is neither declared nor registered
+cannot be resolved, and a plugin installed from a declared marketplace but no
+longer named in `enabledPlugins` will never be updated — the usual cause of the
+latter is a plugin CLI command rewriting the tracked file. Both now warn.
+`CLAUDE_BOOTSTRAP_DEBUG=1` prints the settings file it read and the plan it
+derived, including when that plan is empty.
+
 It runs **locally as well as on the web**. Local machines drift into the same
 broken state by a different route: `claude plugin marketplace remove` takes its
 plugins' installs with it, and re-adding the marketplace does not restore them,

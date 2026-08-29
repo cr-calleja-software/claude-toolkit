@@ -102,20 +102,49 @@ for name, entry in declared.items():
     else:
         print("skip\t%s\tunrecognised marketplace source" % name)
 
-for plugin_id, enabled in (settings.get("enabledPlugins") or {}).items():
+enabled_plugins = settings.get("enabledPlugins") or {}
+
+def marketplace_of(plugin_id):
+    return plugin_id.split("@", 1)[1] if "@" in plugin_id else ""
+
+for plugin_id, enabled in enabled_plugins.items():
     if not enabled:
         continue
-    marketplace = plugin_id.split("@", 1)[1] if "@" in plugin_id else ""
+    marketplace = marketplace_of(plugin_id)
     if plugin_id not in known_plugins:
         print("plugin\t%s\t" % plugin_id)
     elif marketplace in declared:
-        # Installed already, and from a marketplace this repo declares — so
+        # Installed already, and from a marketplace this repo declares, so
         # keeping it current is the job of this hook.
         print("update\t%s\t" % plugin_id)
+    elif marketplace not in known_marketplaces:
+        print("warn\t%s\tenabled but its marketplace %s is neither declared in "
+              "extraKnownMarketplaces nor registered, so it cannot be resolved"
+              % (plugin_id, marketplace or "?"))
+
+# Drift the other way: something installed from a marketplace this repo declares
+# but no longer named in enabledPlugins is out of reach for this hook entirely -
+# it will never be updated and will not be reinstalled if it goes missing. The
+# usual cause is a plugin CLI command rewriting the tracked settings.json.
+for plugin_id in sorted(known_plugins):
+    if marketplace_of(plugin_id) in declared and plugin_id not in enabled_plugins:
+        print("warn\t%s\tinstalled from a marketplace this repo declares but "
+              "absent from enabledPlugins in settings.json, so it is not managed "
+              "here - check git diff on that file" % plugin_id)
 PY
 
 plan="$(python3 "$tmp/plan.py" "$SETTINGS" "$tmp/marketplaces.json" "$tmp/plugins.json")" \
   || { warn "could not read $SETTINGS; skipping"; exit 0; }
+
+if [ -n "${CLAUDE_BOOTSTRAP_DEBUG:-}" ]; then
+  log "settings: $SETTINGS"
+  if [ -n "$plan" ]; then
+    log "plan:"
+    printf '%s\n' "$plan" | sed 's/^/  /'
+  else
+    log "plan: nothing to do"
+  fi
+fi
 
 [ -n "$plan" ] || exit 0
 
@@ -151,7 +180,7 @@ while IFS=$'\t' read -r action name ref; do
         warn "could not update plugin $name; it stays at the installed version"
       fi
       ;;
-    skip)
+    skip|warn)
       warn "$name: $ref"
       ;;
   esac
