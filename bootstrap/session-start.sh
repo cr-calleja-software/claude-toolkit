@@ -14,6 +14,13 @@
 # in every repo and never needs editing. Add a marketplace or a plugin to
 # settings.json and the next session picks it up.
 #
+# It runs everywhere — web and local alike. Local machines drift into the same
+# broken state (removing a marketplace takes its plugin installs with it, and
+# re-adding the marketplace does not restore them), and a session that silently
+# lacks its commands is the same problem wherever it happens. Set
+# CLAUDE_BOOTSTRAP_SKIP=1 to opt out for a session — useful while developing the
+# toolkit against a local-path marketplace registration.
+#
 # INSTALL (per consuming repo)
 #   1. cp bootstrap/session-start.sh <repo>/.claude/hooks/session-start.sh
 #   2. chmod +x <repo>/.claude/hooks/session-start.sh
@@ -30,9 +37,7 @@ SETTINGS="${PROJECT_DIR}/.claude/settings.json"
 log()  { echo "claude-bootstrap: $*"; }
 warn() { echo "claude-bootstrap: $*" >&2; }
 
-# Local sessions install plugins through /plugin and its trust prompt; only the
-# web environment needs this.
-[ "${CLAUDE_CODE_REMOTE:-}" = "true" ] || exit 0
+[ -z "${CLAUDE_BOOTSTRAP_SKIP:-}" ] || exit 0
 [ -f "$SETTINGS" ] || exit 0
 
 command -v claude >/dev/null 2>&1 || { warn "claude CLI not on PATH; skipping"; exit 0; }

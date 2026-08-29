@@ -45,8 +45,8 @@ Run these from inside the **consuming** repo (e.g. `good-news`), not this one.
    into that repo's `.claude/settings.json` (committed, same pattern as an
    existing `frontend-design@claude-plugins-official` entry if there is one).
    Equivalent to editing that file by hand if you'd rather not use the CLI.
-3. **Install the web bootstrap hook** — required for Claude Code on the web,
-   a no-op locally. See "Claude Code on the web" below for why:
+3. **Install the bootstrap hook** — required for Claude Code on the web, and
+   it repairs local sessions too. See "Claude Code on the web" below for why:
    ```bash
    mkdir -p .claude/hooks
    cp /path/to/claude-toolkit/bootstrap/session-start.sh .claude/hooks/session-start.sh
@@ -91,9 +91,17 @@ plugin that isn't installed yet.
 Because it is driven entirely by that file, the script is **byte-identical in
 every consuming repo** — copy it once and never edit it. Adding a marketplace or
 a plugin to `settings.json` is enough; the next session picks it up. It is also
-idempotent, guarded on `$CLAUDE_CODE_REMOTE` so local sessions keep using
-`/plugin` and its trust prompt, and it never fails a session — every failure
-path warns on stderr and exits 0.
+idempotent and never fails a session — every failure path warns on stderr and
+exits 0.
+
+It runs **locally as well as on the web**. Local machines drift into the same
+broken state by a different route: `claude plugin marketplace remove` takes its
+plugins' installs with it, and re-adding the marketplace does not restore them,
+leaving `enabledPlugins` pointing at a plugin that is registered but not
+installed — so the commands silently vanish. The hook converges any session on
+whatever `settings.json` declares. Set `CLAUDE_BOOTSTRAP_SKIP=1` to opt out for
+a session, which is what you want while developing this toolkit against a
+local-path marketplace registration.
 
 Why it can't live in this plugin: a hook shipped by the `cr` plugin only runs
 once the plugin is installed, which is the very thing the bootstrap does. Some
