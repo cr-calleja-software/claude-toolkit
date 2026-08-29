@@ -94,6 +94,15 @@ a plugin to `settings.json` is enough; the next session picks it up. It is also
 idempotent and never fails a session — every failure path warns on stderr and
 exits 0.
 
+It also keeps plugins current. A marketplace this repo declares is refreshed
+each session, and a plugin from one of those marketplaces is updated when the
+marketplace publishes a newer version — without that a machine stays pinned to
+whatever version it first installed, and would not even see a newer one, since
+`claude plugin update` reads the cached marketplace clone. Marketplaces the repo
+does not declare (the official one) are left alone; Claude Code manages those,
+and refreshing them would slow every session start for no benefit. A cold start
+does no refresh or update work at all — everything is a fresh add and install.
+
 It runs **locally as well as on the web**. Local machines drift into the same
 broken state by a different route: `claude plugin marketplace remove` takes its
 plugins' installs with it, and re-adding the marketplace does not restore them,

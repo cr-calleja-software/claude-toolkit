@@ -14,6 +14,15 @@
 # in every repo and never needs editing. Add a marketplace or a plugin to
 # settings.json and the next session picks it up.
 #
+# It also keeps things current: a marketplace this repo declares is refreshed
+# each session, and a plugin from one of those marketplaces is updated when the
+# marketplace publishes a newer version. Without that a machine stays pinned to
+# whatever version it first installed, forever — and would not even see a newer
+# one, because `claude plugin update` reads the cached marketplace clone.
+# Marketplaces this repo does not declare (the official one) are left alone;
+# Claude Code manages those, and refreshing them would add latency to every
+# session start for no benefit here.
+#
 # It runs everywhere — web and local alike. Local machines drift into the same
 # broken state (removing a marketplace takes its plugin installs with it, and
 # re-adding the marketplace does not restore them), and a session that silently
@@ -72,8 +81,13 @@ def field(entries, key):
 known_marketplaces = field(registered, "name")
 known_plugins      = field(installed, "id")
 
-for name, entry in (settings.get("extraKnownMarketplaces") or {}).items():
+declared = settings.get("extraKnownMarketplaces") or {}
+
+for name, entry in declared.items():
     if name in known_marketplaces:
+        # Already registered: pull the catalogue so a newer plugin version is
+        # visible to `claude plugin update` below.
+        print("refresh\t%s\t" % name)
         continue
     source = entry.get("source") or {}
     # A marketplace is declared as a github repo, a URL, or a local path.
@@ -84,8 +98,15 @@ for name, entry in (settings.get("extraKnownMarketplaces") or {}).items():
         print("skip\t%s\tunrecognised marketplace source" % name)
 
 for plugin_id, enabled in (settings.get("enabledPlugins") or {}).items():
-    if enabled and plugin_id not in known_plugins:
+    if not enabled:
+        continue
+    marketplace = plugin_id.split("@", 1)[1] if "@" in plugin_id else ""
+    if plugin_id not in known_plugins:
         print("plugin\t%s\t" % plugin_id)
+    elif marketplace in declared:
+        # Installed already, and from a marketplace this repo declares — so
+        # keeping it current is this hook's job.
+        print("update\t%s\t" % plugin_id)
 PY
 )" || { warn "could not read $SETTINGS; skipping"; exit 0; }
 
@@ -101,11 +122,26 @@ while IFS=$'\t' read -r action name ref; do
         warn "could not register marketplace $name ($ref); its plugins will not load"
       fi
       ;;
+    refresh)
+      # Routine, so it is silent unless it fails.
+      claude plugin marketplace update "$name" >/dev/null 2>&1 \
+        || warn "could not refresh marketplace $name; plugin updates may be missed"
+      ;;
     plugin)
       if claude plugin install --yes "$name" >/dev/null 2>&1; then
         log "installed plugin $name"
       else
         warn "could not install plugin $name; its commands and skills will not load"
+      fi
+      ;;
+    update)
+      # Quiet when already current; only a real version change is worth a line.
+      if out="$(claude plugin update "$name" 2>&1)"; then
+        case "$out" in
+          *"updated from"*) log "updated plugin $name — restart to apply" ;;
+        esac
+      else
+        warn "could not update plugin $name; it stays at the installed version"
       fi
       ;;
     skip)
