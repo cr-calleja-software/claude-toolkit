@@ -22,7 +22,26 @@ register it from a local clone instead, so edits are picked up on the next
 Claude Code session without needing to push/pull first:
 
 ```bash
+claude plugin marketplace remove claude-toolkit
 claude plugin marketplace add /path/to/your/local/claude-toolkit
+```
+
+⚠️ **`claude plugin marketplace remove` edits the settings of whichever repo
+you run it in.** If that repo's `.claude/settings.json` is committed — every
+consuming repo's is — it strips the `extraKnownMarketplaces` block and the
+plugin's `enabledPlugins` line out of the tracked file. Run the swap from
+outside a consuming repo, or `git checkout -- .claude/settings.json` afterwards
+and check `git status` before committing anything.
+
+While developing this way, set `CLAUDE_BOOTSTRAP_SKIP=1` so the bootstrap hook
+in a consuming repo does not re-register the GitHub marketplace behind you and
+update the plugin out from under your local clone.
+
+Switch back when you are done:
+
+```bash
+claude plugin marketplace remove claude-toolkit
+claude plugin marketplace add https://github.com/cr-calleja-software/claude-toolkit
 ```
 
 Confirm it registered:
@@ -37,14 +56,30 @@ Run these from inside the **consuming** repo (e.g. `good-news`), not this one.
 
 1. **Write `.claude/project.md`** at that repo's root — see the contract
    below. Every command in this plugin reads it; nothing works without it.
-2. **Enable the plugin** for that project:
-   ```bash
-   claude plugin install cr@claude-toolkit --scope project
+2. **Enable the plugin** for that project by adding it to that repo's
+   committed `.claude/settings.json` by hand:
+   ```json
+   "enabledPlugins": {"cr@claude-toolkit": true}
    ```
-   `--scope project` writes `"enabledPlugins": {"cr@claude-toolkit": true}`
-   into that repo's `.claude/settings.json` (committed, same pattern as an
-   existing `frontend-design@claude-plugins-official` entry if there is one).
-   Equivalent to editing that file by hand if you'd rather not use the CLI.
+   (same pattern as an existing `frontend-design@claude-plugins-official` entry
+   if there is one), then install the plugin itself at the default **user**
+   scope:
+   ```bash
+   claude plugin install cr@claude-toolkit
+   ```
+   The two halves are separate on purpose: `enabledPlugins` is what activates
+   the plugin for the repo and belongs in git; the install is machine-local
+   state and does not. Once the bootstrap hook from step 3 is in place you can
+   skip the install entirely — the hook does it from what `settings.json`
+   declares.
+
+   **Do not use `--scope project`.** It writes the enablement for you, but the
+   matching `claude plugin uninstall --scope project` (and
+   `claude plugin marketplace remove`) then *rewrites that committed file* —
+   stripping the `enabledPlugins` line and the `extraKnownMarketplaces` block
+   and reordering what remains. It also leaves a second install record
+   alongside any user-scope one, and `claude plugin update` only updates one
+   scope, so the other silently goes stale.
 3. **Install the bootstrap hook** — required for Claude Code on the web, and
    it repairs local sessions too. See "Claude Code on the web" below for why:
    ```bash
@@ -71,7 +106,8 @@ Run these from inside the **consuming** repo (e.g. `good-news`), not this one.
    or falling back to generic behaviour.
 6. Commit `.claude/project.md`, `.claude/hooks/session-start.sh` and the
    `.claude/settings.json` change on a branch and open a PR, same as any other
-   change to that repo.
+   change to that repo. Check `git diff` on `settings.json` first — plugin CLI
+   commands rewrite that file, so it can carry changes you did not make.
 
 ## Claude Code on the web
 
