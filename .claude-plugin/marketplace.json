@@ -1,8 +1,8 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "claude-toolkit",
-  "version": "0.1.0",
-  "description": "Clint's personal Claude Code toolkit for cr-calleja-software projects",
+  "version": "0.1.1",
+  "description": "CR Software's custom Claude Code toolkit for cr-calleja-software projects",
   "owner": {
     "name": "Clint Calleja"
   },

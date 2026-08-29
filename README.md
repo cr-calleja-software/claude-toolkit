@@ -318,10 +318,15 @@ claude plugin tag plugins/cr --dry-run     # confirm the version that merged
 claude plugin tag plugins/cr --push        # creates and pushes cr--v<version>
 ```
 
-Web sessions pick the new version up on their next session with no action.
-Local machines need `claude plugin update cr@claude-toolkit` and a restart, so
-name the new version in the PR body. Rolling back means reverting on `main` and
-bumping a patch — a tag can't do it. See `CLAUDE.md` for the full flow.
+A repo with the bootstrap hook installed updates itself, on the web and locally
+alike: the hook refreshes the marketplace and updates the plugin at session
+start. As with any plugin install, the new version loads from the *next* session
+(or after `/reload-plugins`), so the first session after a release can still be
+running the old one. Only a repo without the hook needs
+`claude plugin update cr@claude-toolkit` and a restart. Name the new version in
+the PR body either way, so anyone on a stale machine can tell what they should
+be seeing. Rolling back means reverting on `main` and bumping a patch — a tag
+can't do it. See `CLAUDE.md` for the full flow.
 
 **Adding a new command or skill**
 - Add the file under `commands/` or `skills/<name>/SKILL.md`.
