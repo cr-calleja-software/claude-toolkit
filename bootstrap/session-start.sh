@@ -83,8 +83,27 @@ def field(entries, key):
             if isinstance(e, dict) and isinstance(e.get(key), str)} \
            if isinstance(entries, list) else set()
 
+def scopes_by_plugin(entries):
+    # A plugin can be installed more than once: once at user scope, and once per
+    # project whose settings.json enables it. Claude Code updates one scope at a
+    # time, so every scope has to be visited or the others silently go stale.
+    out = {}
+    if not isinstance(entries, list):
+        return out
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        plugin_id = entry.get("id")
+        scope = entry.get("scope") or "user"
+        if not isinstance(plugin_id, str) or not isinstance(scope, str):
+            continue
+        if scope not in out.setdefault(plugin_id, []):
+            out[plugin_id].append(scope)
+    return out
+
 known_marketplaces = field(registered, "name")
-known_plugins      = field(installed, "id")
+installed_scopes   = scopes_by_plugin(installed)
+known_plugins      = set(installed_scopes)
 
 declared = settings.get("extraKnownMarketplaces") or {}
 
@@ -115,8 +134,10 @@ for plugin_id, enabled in enabled_plugins.items():
         print("plugin\t%s\t" % plugin_id)
     elif marketplace in declared:
         # Installed already, and from a marketplace this repo declares, so
-        # keeping it current is the job of this hook.
-        print("update\t%s\t" % plugin_id)
+        # keeping it current is the job of this hook - in every scope it is
+        # installed in, not just the default one.
+        for scope in installed_scopes[plugin_id]:
+            print("update\t%s\t%s" % (plugin_id, scope))
     elif marketplace not in known_marketplaces:
         print("warn\t%s\tenabled but its marketplace %s is neither declared in "
               "extraKnownMarketplaces nor registered, so it cannot be resolved"
@@ -172,12 +193,12 @@ while IFS=$'\t' read -r action name ref; do
       ;;
     update)
       # Quiet when already current; only a real version change is worth a line.
-      if out="$(claude plugin update "$name" 2>&1)"; then
+      if out="$(claude plugin update --scope "$ref" "$name" 2>&1)"; then
         case "$out" in
-          *"updated from"*) log "updated plugin $name — restart to apply" ;;
+          *"updated from"*) log "updated plugin $name at $ref scope — restart to apply" ;;
         esac
       else
-        warn "could not update plugin $name; it stays at the installed version"
+        warn "could not update plugin $name at $ref scope; it stays at the installed version"
       fi
       ;;
     skip|warn)

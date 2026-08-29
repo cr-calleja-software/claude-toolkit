@@ -139,6 +139,11 @@ does not declare (the official one) are left alone; Claude Code manages those,
 and refreshing them would slow every session start for no benefit. A cold start
 does no refresh or update work at all — everything is a fresh add and install.
 
+A plugin can be installed more than once — once at user scope, and once per
+project whose `settings.json` enables it — and `claude plugin update` only ever
+updates one scope at a time. The hook updates every scope it finds a plugin in,
+so the copies cannot drift apart.
+
 When something is out of its reach it says so rather than going quiet. A plugin
 enabled in `settings.json` whose marketplace is neither declared nor registered
 cannot be resolved, and a plugin installed from a declared marketplace but no
