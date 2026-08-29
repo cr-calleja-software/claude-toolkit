@@ -59,7 +59,12 @@ claude plugin list --json            >"$tmp/plugins.json"      2>/dev/null || ec
 
 # Diff what settings.json declares against what is already present, and print
 # one tab-separated action per line. Nothing to do prints nothing.
-plan="$(python3 - "$SETTINGS" "$tmp/marketplaces.json" "$tmp/plugins.json" <<'PY'
+#
+# The planner is written out and then run, rather than piped into python3 from a
+# heredoc inside $(...). bash 3.2 — still /bin/bash on macOS — mis-parses a
+# heredoc inside command substitution and reads an apostrophe in the body as an
+# opening quote, failing the whole script with "unexpected EOF".
+cat >"$tmp/plan.py" <<'PY'
 import json, sys
 
 def load(path, fallback):
@@ -105,10 +110,12 @@ for plugin_id, enabled in (settings.get("enabledPlugins") or {}).items():
         print("plugin\t%s\t" % plugin_id)
     elif marketplace in declared:
         # Installed already, and from a marketplace this repo declares — so
-        # keeping it current is this hook's job.
+        # keeping it current is the job of this hook.
         print("update\t%s\t" % plugin_id)
 PY
-)" || { warn "could not read $SETTINGS; skipping"; exit 0; }
+
+plan="$(python3 "$tmp/plan.py" "$SETTINGS" "$tmp/marketplaces.json" "$tmp/plugins.json")" \
+  || { warn "could not read $SETTINGS; skipping"; exit 0; }
 
 [ -n "$plan" ] || exit 0
 
