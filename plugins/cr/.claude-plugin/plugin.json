@@ -1,9 +1,17 @@
 {
   "name": "cr",
   "description": "GitHub workflow commands and audits for cr-calleja-software projects, configured per-project via .claude/project.md",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "author": {
     "name": "Clint Calleja",
     "email": "clint.calleja@gmail.com"
-  }
+  },
+  "homepage": "https://github.com/cr-calleja-software/claude-toolkit",
+  "repository": "https://github.com/cr-calleja-software/claude-toolkit",
+  "keywords": [
+    "github",
+    "code-review",
+    "seo",
+    "workflow"
+  ]
 }
