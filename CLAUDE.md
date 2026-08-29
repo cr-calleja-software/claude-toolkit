@@ -102,14 +102,50 @@ picked up next session automatically via a local-path marketplace; if you
 changed `plugin.json` or `marketplace.json`, run
 `claude plugin marketplace update claude-toolkit` first.
 
-## How consumers pick up a new version
+## Releasing
 
-- **Claude Code on the web** — every session starts in a fresh container and
-  installs from the marketplace, so cloud sessions get the newest version with
-  no action needed.
-- **Local machines** — pinned to whatever is installed until someone runs
-  `claude plugin update cr@claude-toolkit` (a restart applies it). Mention the
-  new version in the PR body so people know there is something to pull.
+**Merging to `main` is the release.** A marketplace installed from a GitHub repo
+tracks that repo's default branch — the marketplace entry pins no ref, and an
+install records the commit it resolved from `main`. Consumers get `main`'s HEAD,
+never a tag. Tags here are a record and a rollback reference, not the
+distribution mechanism; nothing waits on one.
+
+Tag after the merge, from `main`, never from a PR branch — a tag cut on the
+branch would point at a pre-merge commit that is not what consumers install.
+
+```bash
+git checkout main && git pull
+claude plugin tag plugins/cr --dry-run     # confirm the version that merged
+claude plugin tag plugins/cr --push        # creates and pushes cr--v<version>
+git ls-remote --tags origin                # confirm it landed
+```
+
+The tag name is `cr--v<version>`, derived from `plugin.json`; `--push` sends it
+to `origin`. Use `-m "cr %s"` to set the annotation message (`%s` expands to the
+version) — the default already reads `cr <version>`, so pass it only if you want
+different wording.
+
+`--force` skips the dirty-tree and tag-already-exists checks. Use it only to
+re-tag a mistake you have not pushed. Never move a tag that is already on the
+remote: cut a new patch version instead, so anyone who read the old tag still
+sees what it pointed at.
+
+The catalogue has no tag of its own — `claude plugin tag` is per plugin, so a
+`marketplace.json` version lives only in the manifest.
+
+### Rolling back
+
+A tag cannot roll consumers back, because they install from `main`. Revert the
+commit on `main` (through a PR, like any other change) and bump a new patch
+version on the way out — the revert is what consumers pick up, and the new
+version is how they can tell they picked it up. Then tag that.
+
+### After a release
+
+- **Claude Code on the web** — nothing to do; the next session installs fresh
+  from `main`.
+- **Local machines** — `claude plugin update cr@claude-toolkit`, then restart
+  Claude Code. Say the new version in the PR body so people know to run it.
 
 ## Branch and PR discipline
 

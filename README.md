@@ -223,6 +223,25 @@ holds its own copy, so call out in the PR which repos need to re-copy it.
 `CLAUDE.md` holds the full rules with the reasoning behind them, and is what an
 agent working in this repo reads automatically.
 
+### Releasing
+
+**Merging to `main` is the release** — a marketplace installed from a GitHub
+repo tracks the default branch, so consumers get `main`'s HEAD and never a tag.
+Tags are a record and a rollback reference; nothing waits on one.
+
+Tag from `main` after the merge, never from a PR branch:
+
+```bash
+git checkout main && git pull
+claude plugin tag plugins/cr --dry-run     # confirm the version that merged
+claude plugin tag plugins/cr --push        # creates and pushes cr--v<version>
+```
+
+Web sessions pick the new version up on their next session with no action.
+Local machines need `claude plugin update cr@claude-toolkit` and a restart, so
+name the new version in the PR body. Rolling back means reverting on `main` and
+bumping a patch — a tag can't do it. See `CLAUDE.md` for the full flow.
+
 **Adding a new command or skill**
 - Add the file under `commands/` or `skills/<name>/SKILL.md`.
 - If it needs project-specific facts, document the new `project.md`
