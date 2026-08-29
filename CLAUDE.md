@@ -185,10 +185,15 @@ version is how they can tell they picked it up. Then tag that.
 
 ### After a release
 
-- **Claude Code on the web** — nothing to do; the next session installs fresh
-  from `main`.
-- **Local machines** — `claude plugin update cr@claude-toolkit`, then restart
-  Claude Code. Say the new version in the PR body so people know to run it.
+- **Any repo with the bootstrap hook** — nothing to do, web or local: the hook
+  refreshes the marketplace and updates the plugin at session start. As with any
+  plugin install the new version loads from the next session, so the first
+  session after a release can still be on the old one.
+- **A repo without the hook** — `claude plugin update cr@claude-toolkit`, then
+  restart Claude Code.
+
+Say the new version in the PR body either way, so anyone on a stale machine can
+tell what they should be seeing.
 
 ## Branch and PR discipline
 

@@ -4,15 +4,24 @@ Shared Claude Code commands + skills for cr-calleja-software projects, distribut
 as a plugin marketplace so `festa-tracker`, `good-news`, `lanca-mt` (and future
 repos) stop copy-pasting `.claude/commands/*.md`.
 
+The repo is **public**. Nothing repo-specific lives here — every command and
+skill reads the consuming repo's `.claude/project.md` instead — so publishing it
+exposes no project detail, and keeping it that way is a contributing rule.
+
 ## Install (per machine, one-time)
 
-Requires the `claude` CLI and access to the private
+Requires the `claude` CLI. The
 [`cr-calleja-software/claude-toolkit`](https://github.com/cr-calleja-software/claude-toolkit)
-repo. Register it as a marketplace:
+repo is public, so there is no access to arrange first. Register it as a
+marketplace:
 
 ```bash
 claude plugin marketplace add https://github.com/cr-calleja-software/claude-toolkit
 ```
+
+The `owner/repo` shorthand — `claude plugin marketplace add
+cr-calleja-software/claude-toolkit` — is equivalent. The full URL is used
+throughout this README so the swap commands below stay copy-pasteable.
 
 This writes the marketplace registration into your **user-level**
 `~/.claude/settings.json` — do it once per machine, not once per project.
@@ -241,6 +250,12 @@ board ID), that fact belongs in the consuming repo's `.claude/project.md`,
 not in the command file here. Before editing a command, check whether what
 you're adding is actually generic or actually project-specific.
 
+Since the repo is public, that rule doubles as a privacy rule: no client names,
+credentials, internal URLs, or unreleased product detail in a command, skill, or
+example. The project-board ids in the `project.md` contract above are
+illustrative — real ones belong in the consuming repo, which is where every
+project-specific fact goes anyway.
+
 **Editing an existing command or skill**
 1. Edit the file under `plugins/cr/commands/` or `skills/`.
 2. Validate the manifests still pass:
@@ -303,10 +318,15 @@ claude plugin tag plugins/cr --dry-run     # confirm the version that merged
 claude plugin tag plugins/cr --push        # creates and pushes cr--v<version>
 ```
 
-Web sessions pick the new version up on their next session with no action.
-Local machines need `claude plugin update cr@claude-toolkit` and a restart, so
-name the new version in the PR body. Rolling back means reverting on `main` and
-bumping a patch — a tag can't do it. See `CLAUDE.md` for the full flow.
+A repo with the bootstrap hook installed updates itself, on the web and locally
+alike: the hook refreshes the marketplace and updates the plugin at session
+start. As with any plugin install, the new version loads from the *next* session
+(or after `/reload-plugins`), so the first session after a release can still be
+running the old one. Only a repo without the hook needs
+`claude plugin update cr@claude-toolkit` and a restart. Name the new version in
+the PR body either way, so anyone on a stale machine can tell what they should
+be seeing. Rolling back means reverting on `main` and bumping a patch — a tag
+can't do it. See `CLAUDE.md` for the full flow.
 
 **Adding a new command or skill**
 - Add the file under `commands/` or `skills/<name>/SKILL.md`.
@@ -338,4 +358,6 @@ all the work happens in the new repo.
       `.claude/commands/*.md` + `.claude/skills/seo-audit`
       — committed on a `chore/add-claude-project-md` branch in each repo,
       PRs open
-- [x] Pushed to GitHub — private, `cr-calleja-software/claude-toolkit`
+- [x] Pushed to GitHub — `cr-calleja-software/claude-toolkit`, now **public**
+- [ ] Pick a license — the repo is public but has no `LICENSE` file, so it is
+      "all rights reserved" by default and nobody outside the org can reuse it
