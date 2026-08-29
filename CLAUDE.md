@@ -86,6 +86,48 @@ reach them through a plugin update. When you change it, say so explicitly in
 the PR body and list the repos that need to re-copy the file — a version bump
 cannot do that job for you.
 
+## Editing bootstrap/session-start.sh
+
+This file is copied into every consuming repo and runs at the start of every
+session there, so a mistake in it breaks people who did not touch it. Three
+invariants:
+
+**1. It must parse under bash 3.2.** macOS still ships bash 3.2 as
+`/bin/bash`, and these repos are developed on Macs, so 3.2 is the floor
+regardless of what a Linux CI box has. Concretely:
+
+- **Never put a heredoc inside `$(...)`.** bash 3.2 mis-parses it and reads an
+  apostrophe in the heredoc body as an opening quote, killing the whole script
+  with ``unexpected EOF while looking for matching `'``. This has happened once
+  already, from a single word in a Python comment. The planner is written to a
+  file and then run for exactly this reason.
+- **Keep the planner body free of apostrophes** — belt and braces, so
+  reintroducing the pattern cannot be fatal.
+- **No bash 4+ syntax**: associative arrays (`declare -A`), `mapfile`,
+  `readarray`, `${var^^}` / `${var,,}`, `&>>`, or `;;&` in a `case`.
+
+**`bash -n` on Linux proves nothing here** — bash 5 parses the broken construct
+happily. Check it the way it actually fails:
+
+```bash
+bash -n bootstrap/session-start.sh          # necessary, not sufficient
+grep -n '\$(.*<<' bootstrap/session-start.sh   # must print nothing
+/bin/bash -n bootstrap/session-start.sh     # on a Mac, the authoritative check
+```
+
+**2. It must never write to a consuming repo's `.claude/settings.json`.** That
+file is committed; a session-start hook dirtying it puts changes in a diff that
+the author did not make. Read it, never write it — and install plugins at the
+default user scope, never `--scope project`, because that scope writes there.
+Check with `git status` in a consuming repo after a run.
+
+**3. It must never fail a session.** Every failure path warns on stderr and
+exits 0. A missing tool, an unreachable marketplace, or an unparseable
+settings.json degrades to a warning, never a broken session start.
+
+When the behaviour changes, say so in the PR and name the repos that need to
+re-copy the file — no version bump carries it to them.
+
 ## Before you commit
 
 ```bash
@@ -95,7 +137,8 @@ claude plugin tag plugins/cr --dry-run   # confirms plugin.json and the
                                          # marketplace entry agree on the version
 ```
 
-All three must pass. Then test against a real consuming repo — `cd` into one
+All three must pass, plus the bash 3.2 checks above if you touched
+`bootstrap/`. Then test against a real consuming repo — `cd` into one
 with a `.claude/project.md` and the plugin enabled, start a new Claude Code
 session, and actually run the command you changed. Command and skill edits are
 picked up next session automatically via a local-path marketplace; if you
