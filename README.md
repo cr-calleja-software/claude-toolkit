@@ -181,12 +181,11 @@ you're adding is actually generic or actually project-specific.
    ```bash
    claude plugin validate .claude-plugin/marketplace.json --strict
    claude plugin validate plugins/cr --strict
+   claude plugin tag plugins/cr --dry-run
    ```
-3. Bump `version` in `plugins/cr/.claude-plugin/plugin.json` —
-   patch for wording/prompt tweaks, minor for a new command/skill or a new
-   optional `project.md` field, major for a breaking change to the
-   `project.md` contract (one that would silently misbehave against an
-   existing project.md written for the old contract).
+3. **Bump `version` in `plugins/cr/.claude-plugin/plugin.json`, in the same
+   commit** — see [Versioning](#versioning) below. This is not optional: an
+   unbumped change is indistinguishable, to a consuming repo, from no change.
 4. **Test against a real consuming repo before merging**: `cd` into
    `good-news` (or any repo with `.claude/project.md` and the plugin
    enabled), start a new Claude Code session, and actually run the command
@@ -197,6 +196,32 @@ you're adding is actually generic or actually project-specific.
    start a new session.
 5. Commit on a branch and open a PR — same discipline as the consuming repos:
    no direct pushes to `main`.
+
+### Versioning
+
+Every change under `plugins/cr/` bumps the plugin version in the same commit.
+Pick the level from what the change does to a repo already using the plugin,
+with a `.claude/project.md` written for the current contract:
+
+| Level | When | Examples |
+| --- | --- | --- |
+| **MAJOR** | An existing consumer breaks or silently misbehaves without a change on their side | Removing/renaming a `project.md` field; making an optional field required; changing what a field means; removing or renaming a command; renaming the plugin |
+| **MINOR** | New capability, existing consumers unaffected | A new command, skill or hook; a new *optional* `project.md` field; deliberately changing a skill's trigger surface |
+| **PATCH** | Behaviour unchanged in intent | Wording and typo fixes; clarifying an ambiguous instruction; fixing a command to do what it already documented |
+
+Undecided between two levels? Take the higher one — an over-bump costs nothing,
+an under-bump leaves consumers on a stale plugin until something misbehaves.
+
+`.claude-plugin/marketplace.json` versions the **catalogue** separately: bump it
+when a plugin is added (minor), removed or renamed (major), or when marketplace
+metadata changes (patch). A plugin version bump alone does not touch it.
+
+Repo-root docs and `bootstrap/session-start.sh` bump nothing — but a bootstrap
+change does not reach consumers through a plugin update either, since each repo
+holds its own copy, so call out in the PR which repos need to re-copy it.
+
+`CLAUDE.md` holds the full rules with the reasoning behind them, and is what an
+agent working in this repo reads automatically.
 
 **Adding a new command or skill**
 - Add the file under `commands/` or `skills/<name>/SKILL.md`.
