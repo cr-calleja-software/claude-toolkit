@@ -96,12 +96,23 @@ read_meta() {
 # tag for a version that already has one under its old name.
 #
 # A transport failure must never read as "absent": this is the one thing the
-# script exists to be trustworthy about, so an unreachable remote aborts rather
-# than returning a confident wrong answer.
+# script exists to be trustworthy about.
+#
+# It returns 1 rather than calling die, because every caller invokes it inside
+# $(...) — and there die would only exit the substitution's subshell, leaving the
+# parent to carry on with an empty result that reads as "no tag". The exit status
+# is the one channel a command substitution propagates, so callers must use
+# `FOUND="$(remote_tag_for_version)" || exit 1`: the `||` binds to the
+# assignment, whose status is the substitution's.
+#
+# Empty output with status 0 means "reached the remote, no tag there". Status 1
+# means "could not tell" — never the same thing.
 remote_tag_for_version() {
   local out
-  out="$(git ls-remote --tags origin "refs/tags/v${VERSION}" "refs/tags/${NAME}--v${VERSION}" 2>&1)" \
-    || die "could not reach origin to check tags: $out"
+  out="$(git ls-remote --tags origin "refs/tags/v${VERSION}" "refs/tags/${NAME}--v${VERSION}" 2>&1)" || {
+    echo "release-tag: could not reach origin to check tags: $out" >&2
+    return 1
+  }
   printf '%s\n' "$out" \
     | sed -n 's|.*[[:space:]]refs/tags/||p' \
     | sed 's|\^{}$||' \
@@ -125,7 +136,7 @@ if [ -n "$CHECK_ONLY" ]; then
   [ -n "$NAME" ] && [ -n "$VERSION" ] || die "name or version missing from $MANIFEST on origin/main"
   TAG="v${VERSION}"
 
-  FOUND="$(remote_tag_for_version)"
+  FOUND="$(remote_tag_for_version)" || exit 1
   if [ -n "$FOUND" ]; then
     note "$FOUND is on the remote — $PLUGIN_DIR $VERSION (on main) is tagged"
     exit 0
@@ -167,7 +178,7 @@ if [ "$LOCAL" != "$REMOTE" ]; then
   die "local main is ahead of or has diverged from origin/main — push or reconcile before tagging, or the tag names a commit consumers cannot install"
 fi
 
-FOUND="$(remote_tag_for_version)"
+FOUND="$(remote_tag_for_version)" || exit 1
 if [ -n "$FOUND" ]; then
   die "$VERSION is already tagged on the remote as $FOUND. Never move or duplicate a published tag — anyone who read it should still see what it pointed at. Bump a new patch version, merge that, then tag it"
 fi
@@ -207,7 +218,8 @@ if ! git push origin "refs/tags/$TAG"; then
   die "push failed; removed the local tag so a re-run starts clean"
 fi
 
-if [ -n "$(remote_tag_for_version)" ]; then
+PUSHED="$(remote_tag_for_version)" || exit 1
+if [ -n "$PUSHED" ]; then
   note "$TAG is on the remote"
   exit 0
 fi

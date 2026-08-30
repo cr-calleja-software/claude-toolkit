@@ -139,7 +139,30 @@ claude plugin tag plugins/cr --dry-run   # confirms plugin.json and the
 ```
 
 All three must pass, plus the bash 3.2 checks above if you touched
-`bootstrap/`. Then test against a real consuming repo — `cd` into one
+`bootstrap/`.
+
+If you touched `scripts/release-tag.sh`, also make `git` fail on purpose. Its
+guards are only worth what they do when the network is down, and an outage that
+takes out one subcommand while others still work is the case that slips through:
+
+```bash
+mkdir -p /tmp/shim && cat > /tmp/shim/git <<'SHIM'
+#!/bin/bash
+[ "${1:-}" = "ls-remote" ] && { echo "fatal: could not resolve host" >&2; exit 128; }
+exec /usr/bin/git "$@"
+SHIM
+chmod +x /tmp/shim/git
+PATH=/tmp/shim:$PATH scripts/release-tag.sh --check   # must exit 1, never 2
+```
+
+Exit 2 there would be a false "this release is untagged" on a version that is
+tagged — the one answer the script must never give. This has been got wrong
+once: a helper that called `die` on an unreachable remote, invoked as
+`$(helper)`, only killed the substitution's subshell while the caller carried on
+with an empty result. A function used in `$(...)` can signal failure only
+through its exit status, and the caller has to check it.
+
+Then test against a real consuming repo — `cd` into one
 with a `.claude/project.md` and the plugin enabled, start a new Claude Code
 session, and actually run the command you changed. Command and skill edits are
 picked up next session automatically via a local-path marketplace; if you
