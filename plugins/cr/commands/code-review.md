@@ -26,7 +26,7 @@ Thorough code review of the current branch diff against `main`. Checks correctne
 
 You are performing a code review. Arguments: **$ARGUMENTS**
 
-Read `.claude/project.md` first for `owner`/`repo`, the `## Review checklist` section, and — if present — the `## Design checklist` and `## Discoverability checklist` sections. Their bullets are project-specific findings to check for in addition to the generic checklist below; sections 1, 5 and 8 each say which one they draw on.
+Read `.claude/project.md` first for `owner`/`repo`, the `## Review checklist` section, and — if present — the `## Design checklist` and `## Discoverability checklist` sections. Their bullets are project-specific findings to check for in addition to the generic checklist below; the sections that draw on them say so where they do.
 
 Parse flags from the arguments:
 - If `--pr <N>` is present, fetch that PR's diff via `mcp__github__pull_request_read` (`owner`/`repo` from `project.md`, `pullNumber: N`). Also fetch the file list.
