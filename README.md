@@ -231,6 +231,13 @@ any open product questions that should block silent assumptions>
 ## Design checklist
 <project-specific bullets /cr:frontend-design-audit checks for>
 
+## Discoverability checklist
+<optional — project-specific bullets /cr:code-review's section 8 and
+/cr:ship-issue's Step 4.6 check when a change touches the public surface: which
+files list public routes, which pages need structured data, which generated
+artefacts must stay in sync. Omit it and those checks still run on their generic
+bullets, so a repo without this section behaves exactly as before.>
+
 ## How to test
 <boilerplate steps /cr:ship-issue puts at the top of a PR's "How to test" section>
 

@@ -104,6 +104,7 @@ gating those here would stop them firing exactly when they are needed.
 - A new entity page emitting no schema.org structured data where its siblings do
 - A hardcoded value in a discoverability file that is derivable from data (an item count, a season, a date range) and will silently go stale
 - **A hand-maintained file duplicating something already generated** — e.g. a static `llms.txt` listing routes that the sitemap derives from data. Two hand-maintained lists of the same facts drift, and nothing compares them; flag it even when both are currently correct
+- Anything called out under `project.md`'s `## Discoverability checklist` — the surfaces only that repo can name. Skip if the section is absent
 
 ---
 

@@ -26,7 +26,7 @@ Full SDLC automation: read a GitHub issue, implement the change, commit, push, o
 
 You are executing the full development lifecycle for GitHub issue: **$ARGUMENTS**
 
-Read `.claude/project.md` first — `owner`/`repo` from its frontmatter drive every `mcp__github__*` call below; its `## Scope`, `## Review checklist`, `## Design checklist`, and `## How to test` sections drive the steps that follow.
+Read `.claude/project.md` first — `owner`/`repo` from its frontmatter drive every `mcp__github__*` call below; its `## Scope`, `## Review checklist`, `## Design checklist`, `## Discoverability checklist` (optional), and `## How to test` sections drive the steps that follow.
 
 Follow every step in order. Do not skip steps.
 
@@ -125,6 +125,7 @@ nothing and fails no test, so nobody finds out until someone goes looking.
 3. Each new page sets per-page metadata, including a canonical URL
 4. A new entity page emits the schema.org structured data its siblings emit
 5. Nothing you touched hardcodes a value that is derivable from the project's data (an item count, a season, a date range)
+6. Everything under `project.md`'s `## Discoverability checklist`, if it has one — the surfaces generic checks can't name. A repo without that section stops at item 5
 
 A dead URL left behind is the same defect as a live one omitted — which is why
 removal and renaming count for items 1 and 2, not just adding.
