@@ -178,20 +178,30 @@ versions are tagged, here or anywhere else — it queries the remote.
 Doing it by hand is the same thing without the guards:
 
 ```bash
-claude plugin tag plugins/cr --dry-run     # confirm the version that merged
-claude plugin tag plugins/cr --push        # creates and pushes cr--v<version>
+claude plugin tag plugins/cr --dry-run     # manifest check only, see below
+git tag -a v<version> -m "cr <version>"    # version from plugin.json, e.g. v0.4.0
+git push origin refs/tags/v<version>
 git ls-remote --tags origin                # confirm it landed
 ```
 
-The tag name is `cr--v<version>`, derived from `plugin.json`; `--push` sends it
-to `origin`. Use `-m "cr %s"` to set the annotation message (`%s` expands to the
-version) — the default already reads `cr <version>`, so pass it only if you want
-different wording.
+**The tag name is `v<version>`** — `v0.4.0`. Note what `claude plugin tag`
+prints: it can only create its own `{name}--v{version}` form and offers no way
+to override the name, so we use it for its manifest check (it confirms
+`plugin.json` and the enclosing marketplace entry agree) and create the tag with
+`git` ourselves. Never let it create the tag with `--push`; the name would be
+wrong.
 
-`--force` skips the dirty-tree and tag-already-exists checks. Use it only to
-re-tag a mistake you have not pushed. Never move a tag that is already on the
-remote: cut a new patch version instead, so anyone who read the old tag still
-sees what it pointed at.
+Two consequences worth knowing:
+
+- `cr--v0.3.0` and `cr--v0.3.1` keep the old name. The format changes from
+  `0.4.0` onwards — published tags are never renamed, for the same reason they
+  are never moved.
+- The plugin name is no longer in the tag, so it lives in the annotation
+  message (`cr <version>`). A **second plugin in this repo would collide** on
+  `v<version>`: give tags their prefix back before adding one.
+
+Never move a tag that is already on the remote: cut a new patch version
+instead, so anyone who read the old tag still sees what it pointed at.
 
 The catalogue has no tag of its own — `claude plugin tag` is per plugin, so a
 `marketplace.json` version lives only in the manifest.

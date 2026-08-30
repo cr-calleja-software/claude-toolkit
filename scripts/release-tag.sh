@@ -9,6 +9,17 @@
 # command, and `--check` reports drift so a missed tag is findable rather than
 # invisible — deliberately by asking the remote, never by trusting a note here.
 #
+# TAG FORMAT
+# Tags are v<version> — v0.4.0. `claude plugin tag` can only produce its own
+# {name}--v{version} form with no way to override it, so this script runs that
+# command for its manifest check only and creates the tag itself. The two tags
+# already on the remote, cr--v0.3.0 and cr--v0.3.1, keep the old name; the
+# format changes from 0.4.0 onwards rather than rewriting published history.
+#
+# Because the plugin name is no longer in the tag, it moves to the annotation
+# message (`cr <version>`). A second plugin in this repo would collide on
+# v<version> and would need the prefix back.
+#
 # It refuses rather than guesses. Every failure path explains what to do instead:
 #
 #   - not on main, or main behind origin  → a tag cut here points at a commit
@@ -68,7 +79,7 @@ NAME="$(printf '%s\n' "$META" | sed -n 1p)"
 VERSION="$(printf '%s\n' "$META" | sed -n 2p)"
 [ -n "$NAME" ] && [ -n "$VERSION" ] || die "name or version missing from $MANIFEST"
 
-TAG="${NAME}--v${VERSION}"
+TAG="v${VERSION}"
 
 # Does the remote already carry this tag? ls-remote queries the remote directly
 # and writes nothing locally, so this stays safe under --check.
@@ -115,8 +126,17 @@ note "tag:     $TAG"
 note "commit:  $(git rev-parse --short HEAD) $(git log -1 --pretty=%s)"
 echo
 
-claude plugin tag "$PLUGIN_DIR" --dry-run || die "dry run failed; not tagging"
-echo
+# Run the CLI's tag command as a dry run purely for its manifest check — it
+# confirms plugin.json and the enclosing marketplace entry agree. Its output
+# names a {name}--v{version} tag we do not use, so surface it only on failure.
+if ! CLI_CHECK="$(claude plugin tag "$PLUGIN_DIR" --dry-run 2>&1)"; then
+  printf '%s\n' "$CLI_CHECK" >&2
+  die "manifest check failed; not tagging"
+fi
+note "manifest check passed (plugin.json agrees with the marketplace entry)"
+
+git rev-parse -q --verify "refs/tags/$TAG" >/dev/null 2>&1 \
+  && die "$TAG already exists locally but not on the remote — delete it with 'git tag -d $TAG' if it was a mistake, then re-run"
 
 if [ -z "$ASSUME_YES" ]; then
   printf 'release-tag: create and push %s? [y/N] ' "$TAG"
@@ -127,7 +147,13 @@ if [ -z "$ASSUME_YES" ]; then
   esac
 fi
 
-claude plugin tag "$PLUGIN_DIR" --push || die "tagging failed; nothing was pushed"
+git tag -a "$TAG" -m "${NAME} ${VERSION}" \
+  || die "could not create tag $TAG"
+
+if ! git push origin "refs/tags/$TAG"; then
+  git tag -d "$TAG" >/dev/null 2>&1
+  die "push failed; removed the local tag so a re-run starts clean"
+fi
 
 if remote_has_tag "$TAG"; then
   note "$TAG is on the remote"

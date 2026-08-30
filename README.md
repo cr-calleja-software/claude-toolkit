@@ -323,6 +323,11 @@ stale or dirty tree, or when the tag is already published. Since nothing
 depends on the tag it is easy to skip — it happened to `0.3.1` — so `--check`
 exists to make a missed one visible.
 
+Tags are named `v<version>` (`v0.4.0`). The two published before that,
+`cr--v0.3.0` and `cr--v0.3.1`, keep their old `{name}--v{version}` name — the
+form `claude plugin tag` produces and cannot be told not to, which is why the
+script creates the tag itself. See `CLAUDE.md` for the details.
+
 A repo with the bootstrap hook installed updates itself, on the web and locally
 alike: the hook refreshes the marketplace and updates the plugin at session
 start. As with any plugin install, the new version loads from the *next* session
