@@ -87,6 +87,24 @@ Go through every changed file. For each finding, note: **file**, **line**, **sev
 - N+1 queries (e.g. fetching related records per item in a loop instead of one joined/batched query)
 - Selecting whole rows/objects when only a subset of fields is needed
 
+#### 8. Discoverability
+
+Applies when the diff touches the public surface — adds, removes or renames a
+route, or changes what the site offers. Skip for pure refactors and internal
+logic.
+
+Only the route-scoped checks are gated this way. Metadata, Open Graph and
+server-rendering apply to *every* diff and stay in section 4 — a refactor that
+drops an `export const metadata` or pushes a page client-side adds no route, so
+gating those here would stop them firing exactly when they are needed.
+
+- A new public route missing from the project's sitemap
+- `llms.txt` (or equivalent) not updated when the set of public routes changed, or when its prose no longer describes what the site offers
+- Missing canonical URL on a new page
+- A new entity page emitting no schema.org structured data where its siblings do
+- A hardcoded value in a discoverability file that is derivable from data (an item count, a season, a date range) and will silently go stale
+- **A hand-maintained file duplicating something already generated** — e.g. a static `llms.txt` listing routes that the sitemap derives from data. Two hand-maintained lists of the same facts drift, and nothing compares them; flag it even when both are currently correct
+
 ---
 
 ### Output format

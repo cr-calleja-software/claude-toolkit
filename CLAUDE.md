@@ -79,6 +79,7 @@ carry no version, so there is nothing there to update.
 
 - `README.md`, this file, and anything else at the repo root
 - `bootstrap/session-start.sh`
+- `scripts/` — repo tooling, never shipped to consumers
 
 `bootstrap/` is not part of the plugin: each consuming repo holds its own
 copied version at `.claude/hooks/session-start.sh`, so a change here does not
@@ -138,7 +139,30 @@ claude plugin tag plugins/cr --dry-run   # confirms plugin.json and the
 ```
 
 All three must pass, plus the bash 3.2 checks above if you touched
-`bootstrap/`. Then test against a real consuming repo — `cd` into one
+`bootstrap/`.
+
+If you touched `scripts/release-tag.sh`, also make `git` fail on purpose. Its
+guards are only worth what they do when the network is down, and an outage that
+takes out one subcommand while others still work is the case that slips through:
+
+```bash
+mkdir -p /tmp/shim && cat > /tmp/shim/git <<'SHIM'
+#!/bin/bash
+[ "${1:-}" = "ls-remote" ] && { echo "fatal: could not resolve host" >&2; exit 128; }
+exec /usr/bin/git "$@"
+SHIM
+chmod +x /tmp/shim/git
+PATH=/tmp/shim:$PATH scripts/release-tag.sh --check   # must exit 1, never 2
+```
+
+Exit 2 there would be a false "this release is untagged" on a version that is
+tagged — the one answer the script must never give. This has been got wrong
+once: a helper that called `die` on an unreachable remote, invoked as
+`$(helper)`, only killed the substitution's subshell while the caller carried on
+with an empty result. A function used in `$(...)` can signal failure only
+through its exit status, and the caller has to check it.
+
+Then test against a real consuming repo — `cd` into one
 with a `.claude/project.md` and the plugin enabled, start a new Claude Code
 session, and actually run the command you changed. Command and skill edits are
 picked up next session automatically via a local-path marketplace; if you
@@ -158,20 +182,53 @@ branch would point at a pre-merge commit that is not what consumers install.
 
 ```bash
 git checkout main && git pull
-claude plugin tag plugins/cr --dry-run     # confirm the version that merged
-claude plugin tag plugins/cr --push        # creates and pushes cr--v<version>
+scripts/release-tag.sh                     # dry-run, confirm, tag, push, verify
+```
+
+`scripts/release-tag.sh` is the whole flow, and refuses rather than guesses:
+not on `main`, `main` behind or diverged from `origin/main`, a dirty tree, or a
+tag already on the remote each abort with what to do instead. `--yes` skips only
+the confirmation prompt, never those checks. It takes a plugin directory
+(default `plugins/cr`), so a second plugin needs no change to it.
+
+Because nothing depends on the tag, this is the step that gets skipped — it
+happened to `0.3.1`, whose tag was missed outright with nothing to surface it.
+Run `scripts/release-tag.sh --check` to see whether the version on `main` is
+tagged. It reads the version from `origin/main` rather than your working tree —
+on any branch here the tree is already bumped past what is released — and needs
+only `git` and `python3`, so it runs on a CI box without the `claude` CLI. Exit
+`0` tagged, `2` untagged, `1` if anything went wrong, so a job can tell a real
+signal from a broken run. Ask it rather than trusting any note about which
+versions are tagged, here or anywhere else — it queries the remote, and counts
+the old `cr--v<version>` names too.
+
+Doing it by hand is the same thing without the guards:
+
+```bash
+claude plugin tag plugins/cr --dry-run     # manifest check only, see below
+git tag -a v<version> -m "cr <version>"    # version from plugin.json, e.g. v0.4.0
+git push origin refs/tags/v<version>
 git ls-remote --tags origin                # confirm it landed
 ```
 
-The tag name is `cr--v<version>`, derived from `plugin.json`; `--push` sends it
-to `origin`. Use `-m "cr %s"` to set the annotation message (`%s` expands to the
-version) — the default already reads `cr <version>`, so pass it only if you want
-different wording.
+**The tag name is `v<version>`** — `v0.4.0`. Note what `claude plugin tag`
+prints: it can only create its own `{name}--v{version}` form and offers no way
+to override the name, so we use it for its manifest check (it confirms
+`plugin.json` and the enclosing marketplace entry agree) and create the tag with
+`git` ourselves. Never let it create the tag with `--push`; the name would be
+wrong.
 
-`--force` skips the dirty-tree and tag-already-exists checks. Use it only to
-re-tag a mistake you have not pushed. Never move a tag that is already on the
-remote: cut a new patch version instead, so anyone who read the old tag still
-sees what it pointed at.
+Two consequences worth knowing:
+
+- `cr--v0.3.0` and `cr--v0.3.1` keep the old name. The format changes from
+  `0.4.0` onwards — published tags are never renamed, for the same reason they
+  are never moved.
+- The plugin name is no longer in the tag, so it lives in the annotation
+  message (`cr <version>`). A **second plugin in this repo would collide** on
+  `v<version>`: give tags their prefix back before adding one.
+
+Never move a tag that is already on the remote: cut a new patch version
+instead, so anyone who read the old tag still sees what it pointed at.
 
 The catalogue has no tag of its own — `claude plugin tag` is per plugin, so a
 `marketplace.json` version lives only in the manifest.

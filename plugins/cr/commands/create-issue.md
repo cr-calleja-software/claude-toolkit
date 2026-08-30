@@ -73,6 +73,7 @@ Describe WHAT is needed; suggest an approach only where it removes ambiguity, an
 ### Acceptance criteria
 - [ ] <observable, testable outcomes — what "done" looks like from the user's side>
 - [ ] <any project-wide acceptance bars from `project.md`'s `## Review checklist` / `## Design checklist` that apply to this change — e.g. mobile layout, design tokens, no regressions on key surfaces>
+- [ ] <if the change adds, removes or renames a user-facing route: that it is reflected in the project's sitemap and in `llms.txt` if it has one, and that a new page sets metadata with a canonical URL>
 
 ### Out of scope
 <explicitly fence off adjacent work so the implementer doesn't sprawl>
