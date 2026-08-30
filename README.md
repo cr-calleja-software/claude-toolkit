@@ -315,7 +315,7 @@ Tag from `main` after the merge, never from a PR branch:
 ```bash
 git checkout main && git pull
 scripts/release-tag.sh          # dry-run, confirm, tag, push, verify
-scripts/release-tag.sh --check  # read-only: is the version on main tagged?
+scripts/release-tag.sh --check  # is the version on origin/main tagged? 0 yes, 2 no
 ```
 
 The script is the flow in `CLAUDE.md` with guards — it refuses off `main`, on a

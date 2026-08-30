@@ -171,9 +171,13 @@ the confirmation prompt, never those checks. It takes a plugin directory
 Because nothing depends on the tag, this is the step that gets skipped — it
 happened to `0.3.1`, whose tag was missed outright with nothing to surface it.
 Run `scripts/release-tag.sh --check` to see whether the version on `main` is
-tagged; it is read-only and exits non-zero when it is not, so it also works as
-a CI or pre-flight check. Ask it rather than trusting any note about which
-versions are tagged, here or anywhere else — it queries the remote.
+tagged. It reads the version from `origin/main` rather than your working tree —
+on any branch here the tree is already bumped past what is released — and needs
+only `git` and `python3`, so it runs on a CI box without the `claude` CLI. Exit
+`0` tagged, `2` untagged, `1` if anything went wrong, so a job can tell a real
+signal from a broken run. Ask it rather than trusting any note about which
+versions are tagged, here or anywhere else — it queries the remote, and counts
+the old `cr--v<version>` names too.
 
 Doing it by hand is the same thing without the guards:
 

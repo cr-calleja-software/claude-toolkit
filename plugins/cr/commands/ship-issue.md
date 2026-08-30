@@ -120,14 +120,14 @@ missing. These are cheap while you are still in the change and near-invisible
 afterwards: a route missing from the sitemap or a stale `llms.txt` breaks
 nothing and fails no test, so nobody finds out until someone goes looking.
 
-1. New or renamed routes appear in the project's sitemap
-2. New or renamed routes appear in `llms.txt`, if the project has one — and its prose still describes the site accurately, not only its route list
+1. The project's sitemap reflects the current route set — routes you added or renamed are present, ones you removed are gone
+2. `llms.txt`, if the project has one, does the same — and its prose still describes the site accurately, not only its route list
 3. Each new page sets per-page metadata, including a canonical URL
 4. A new entity page emits the schema.org structured data its siblings emit
 5. Nothing you touched hardcodes a value that is derivable from the project's data (an item count, a season, a date range)
 
-Removing or renaming a route counts: leaving a dead URL in the sitemap or
-`llms.txt` is the same defect as omitting a live one.
+A dead URL left behind is the same defect as a live one omitted — which is why
+removal and renaming count for items 1 and 2, not just adding.
 
 Do **not** run `/cr:seo-audit` for this. That skill audits the whole project
 rather than the diff, and is read-only by design — it will re-report site-wide
