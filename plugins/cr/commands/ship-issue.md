@@ -183,7 +183,7 @@ Closes #<issue-number>
 
 ## Test plan
 - [ ] <key thing to verify manually>
-- [ ] <the acceptance-bar checklist items from project.md's "## Review checklist" / "## Design checklist" that apply to this change>
+- [ ] <the acceptance-bar checklist items from project.md's "## Review checklist" / "## Design checklist" — and "## Discoverability checklist" if the change touched the public surface — that apply to this change>
 ```
 
 A reviewer should be able to follow **How to test** without reading the diff first.
