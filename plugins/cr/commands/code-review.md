@@ -8,7 +8,7 @@ Thorough code review of the current branch diff against `main`. Checks correctne
 
 > **Prerequisite:** the `--pr` and `--comment` flags require the GitHub MCP server (`mcp__github__*` tools) to be configured. The default local-diff review needs only `git`.
 >
-> **Config:** this command reads `.claude/project.md` at the repo root for `owner`/`repo` and the project-specific `## Review checklist`. If that file is missing, stop and tell the user it needs to exist before this command can run.
+> **Config:** this command reads `.claude/project.md` at the repo root for `owner`/`repo` and the project-specific `## Review checklist`, plus the optional `## Design checklist` and `## Discoverability checklist`. If that file is missing, stop and tell the user it needs to exist before this command can run.
 
 ## Usage
 
@@ -26,7 +26,7 @@ Thorough code review of the current branch diff against `main`. Checks correctne
 
 You are performing a code review. Arguments: **$ARGUMENTS**
 
-Read `.claude/project.md` first for `owner`/`repo` and the `## Review checklist` section — its bullets are project-specific findings to check for in addition to the generic checklist below.
+Read `.claude/project.md` first for `owner`/`repo`, the `## Review checklist` section, and — if present — the `## Design checklist` and `## Discoverability checklist` sections. Their bullets are project-specific findings to check for in addition to the generic checklist below; the sections that draw on them say so where they do.
 
 Parse flags from the arguments:
 - If `--pr <N>` is present, fetch that PR's diff via `mcp__github__pull_request_read` (`owner`/`repo` from `project.md`, `pullNumber: N`). Also fetch the file list.
@@ -104,6 +104,7 @@ gating those here would stop them firing exactly when they are needed.
 - A new entity page emitting no schema.org structured data where its siblings do
 - A hardcoded value in a discoverability file that is derivable from data (an item count, a season, a date range) and will silently go stale
 - **A hand-maintained file duplicating something already generated** — e.g. a static `llms.txt` listing routes that the sitemap derives from data. Two hand-maintained lists of the same facts drift, and nothing compares them; flag it even when both are currently correct
+- Anything called out under `project.md`'s `## Discoverability checklist` — the surfaces only that repo can name. Skip if the section is absent
 
 ---
 
