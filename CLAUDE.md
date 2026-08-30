@@ -79,6 +79,7 @@ carry no version, so there is nothing there to update.
 
 - `README.md`, this file, and anything else at the repo root
 - `bootstrap/session-start.sh`
+- `scripts/` — repo tooling, never shipped to consumers
 
 `bootstrap/` is not part of the plugin: each consuming repo holds its own
 copied version at `.claude/hooks/session-start.sh`, so a change here does not
@@ -158,6 +159,24 @@ branch would point at a pre-merge commit that is not what consumers install.
 
 ```bash
 git checkout main && git pull
+scripts/release-tag.sh                     # dry-run, confirm, tag, push, verify
+```
+
+`scripts/release-tag.sh` is the whole flow, and refuses rather than guesses:
+not on `main`, `main` behind or diverged from `origin/main`, a dirty tree, or a
+tag already on the remote each abort with what to do instead. `--yes` skips only
+the confirmation prompt, never those checks. It takes a plugin directory
+(default `plugins/cr`), so a second plugin needs no change to it.
+
+Because nothing depends on the tag, this is the step that gets skipped —
+`cr--v0.3.0` is on the remote and `0.3.1` never was. Run
+`scripts/release-tag.sh --check` to see whether the version on `main` is
+tagged; it is read-only and exits non-zero when it is not, so it also works as
+a CI or pre-flight check.
+
+Doing it by hand is the same thing without the guards:
+
+```bash
 claude plugin tag plugins/cr --dry-run     # confirm the version that merged
 claude plugin tag plugins/cr --push        # creates and pushes cr--v<version>
 git ls-remote --tags origin                # confirm it landed

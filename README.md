@@ -314,9 +314,14 @@ Tag from `main` after the merge, never from a PR branch:
 
 ```bash
 git checkout main && git pull
-claude plugin tag plugins/cr --dry-run     # confirm the version that merged
-claude plugin tag plugins/cr --push        # creates and pushes cr--v<version>
+scripts/release-tag.sh          # dry-run, confirm, tag, push, verify
+scripts/release-tag.sh --check  # read-only: is the version on main tagged?
 ```
+
+The script is the flow in `CLAUDE.md` with guards — it refuses off `main`, on a
+stale or dirty tree, or when the tag is already published. Since nothing
+depends on the tag it is easy to skip (`0.3.1` was), so `--check` exists to make
+a missed one visible.
 
 A repo with the bootstrap hook installed updates itself, on the web and locally
 alike: the hook refreshes the marketplace and updates the plugin at session
