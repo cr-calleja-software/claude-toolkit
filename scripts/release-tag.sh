@@ -4,9 +4,10 @@
 # WHY THIS EXISTS
 # Merging to main is the release — consumers install from the default branch and
 # never see a tag. Tagging is therefore the step nothing depends on, which is
-# exactly why it gets skipped: cr--v0.3.0 is on the remote, 0.3.1 is not, and
-# nothing anywhere noticed. This script makes the flow in CLAUDE.md one command,
-# and `--check` reports drift so a missed tag is findable rather than invisible.
+# exactly why it gets skipped: 0.3.1 shipped and its tag was missed outright, and
+# nothing anywhere surfaced that. This script makes the flow in CLAUDE.md one
+# command, and `--check` reports drift so a missed tag is findable rather than
+# invisible — deliberately by asking the remote, never by trusting a note here.
 #
 # It refuses rather than guesses. Every failure path explains what to do instead:
 #
@@ -40,7 +41,9 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --check) CHECK_ONLY=1 ;;
     --yes|-y) ASSUME_YES=1 ;;
-    -h|--help) sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    # Print the header block, stopping at the first non-comment line, so editing
+    # the header can never leak code into --help or truncate the usage notes.
+    -h|--help) awk 'NR>1 { if ($0 !~ /^#/) exit; sub(/^# ?/, ""); print }' "$0"; exit 0 ;;
     -*) die "unknown option $1 (try --help)" ;;
     *)  PLUGIN_DIR="$1" ;;
   esac

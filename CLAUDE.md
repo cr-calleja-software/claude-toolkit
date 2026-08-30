@@ -168,11 +168,12 @@ tag already on the remote each abort with what to do instead. `--yes` skips only
 the confirmation prompt, never those checks. It takes a plugin directory
 (default `plugins/cr`), so a second plugin needs no change to it.
 
-Because nothing depends on the tag, this is the step that gets skipped —
-`cr--v0.3.0` is on the remote and `0.3.1` never was. Run
-`scripts/release-tag.sh --check` to see whether the version on `main` is
+Because nothing depends on the tag, this is the step that gets skipped — it
+happened to `0.3.1`, whose tag was missed outright with nothing to surface it.
+Run `scripts/release-tag.sh --check` to see whether the version on `main` is
 tagged; it is read-only and exits non-zero when it is not, so it also works as
-a CI or pre-flight check.
+a CI or pre-flight check. Ask it rather than trusting any note about which
+versions are tagged, here or anywhere else — it queries the remote.
 
 Doing it by hand is the same thing without the guards:
 
