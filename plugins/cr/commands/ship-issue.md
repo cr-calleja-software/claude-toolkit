@@ -107,6 +107,33 @@ If the skill surfaces 🟡 medium or 🟢 low priority issues, list them in the 
 
 Skip this step entirely if the issue is backend-only (schema/migrations, server-side logic with no UI impact).
 
+### Step 4.6 — Discoverability check (public-surface changes only)
+
+Ask one question: **did this change add, remove or rename a public route, or
+change what the site offers?**
+
+If no — a pure refactor, internal logic, tooling, or a change behind an existing
+route — skip this step entirely.
+
+If yes, **before committing**, confirm each of the following and fix what is
+missing. These are cheap while you are still in the change and near-invisible
+afterwards: a route missing from the sitemap or a stale `llms.txt` breaks
+nothing and fails no test, so nobody finds out until someone goes looking.
+
+1. New or renamed routes appear in the project's sitemap
+2. New or renamed routes appear in `llms.txt`, if the project has one — and its prose still describes the site accurately, not only its route list
+3. Each new page sets per-page metadata, including a canonical URL
+4. A new entity page emits the schema.org structured data its siblings emit
+5. Nothing you touched hardcodes a value that is derivable from the project's data (an item count, a season, a date range)
+
+Removing or renaming a route counts: leaving a dead URL in the sitemap or
+`llms.txt` is the same defect as omitting a live one.
+
+Do **not** run `/cr:seo-audit` for this. That skill audits the whole project
+rather than the diff, and is read-only by design — it will re-report site-wide
+findings unrelated to this issue and cannot fix what it finds. Use it when
+someone asks how the site's SEO is doing, not as a per-change gate.
+
 ### Step 5 — Commit
 
 Stage only the files you changed (never `git add -A` blindly — avoid committing `.env*` or generated files that don't belong in the repo):

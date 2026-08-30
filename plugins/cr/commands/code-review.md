@@ -61,8 +61,6 @@ Go through every changed file. For each finding, note: **file**, **line**, **sev
 
 #### 4. Framework / stack conventions
 - Client-side rendering used where server-side would work (and vice versa where interactivity is actually needed)
-- Pages that should be server-rendered for SEO/shareability accidentally pushed client-side
-- Missing per-page metadata / Open Graph tags where the project expects them
 - Missing or wrong `key` props in lists
 - `useEffect` (or equivalent) with a missing or incorrect dependency array
 - Data fetching in a component render body instead of the project's intended data-fetching layer
@@ -86,6 +84,21 @@ Go through every changed file. For each finding, note: **file**, **line**, **sev
 - Querying the database/data source directly inside a UI component instead of going through the project's defined data/query layer
 - N+1 queries (e.g. fetching related records per item in a loop instead of one joined/batched query)
 - Selecting whole rows/objects when only a subset of fields is needed
+
+#### 8. Discoverability
+
+Applies when the diff touches the public surface — adds, removes or renames a
+route, or changes what the site offers. Skip for pure refactors and internal
+logic.
+
+- A new public route missing from the project's sitemap
+- `llms.txt` (or equivalent) not updated when the set of public routes changed, or when its prose no longer describes what the site offers
+- Missing canonical URL on a new page
+- Pages that should be server-rendered for SEO/shareability accidentally pushed client-side
+- Missing per-page metadata / Open Graph tags where the project expects them
+- A new entity page emitting no schema.org structured data where its siblings do
+- A hardcoded value in a discoverability file that is derivable from data (an item count, a season, a date range) and will silently go stale
+- **A hand-maintained file duplicating something already generated** — e.g. a static `llms.txt` listing routes that the sitemap derives from data. Two hand-maintained lists of the same facts drift, and nothing compares them; flag it even when both are currently correct
 
 ---
 
