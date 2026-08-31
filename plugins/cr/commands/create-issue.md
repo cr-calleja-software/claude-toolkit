@@ -27,7 +27,7 @@ Turn a rough thought into a well-scoped GitHub issue that an agent can pick up a
 
 You are drafting a GitHub issue from the user's request: **$ARGUMENTS**
 
-Read `.claude/project.md` first. It has YAML frontmatter (`owner`, `repo`, `context_doc`, `reviewers`, `project_board`) and markdown sections (`## Scope`, `## Review checklist`, `## Design checklist`, `## How to test`, plus the optional `## Discoverability checklist` and `## Stack notes`). Use `owner`/`repo` from its frontmatter in every `mcp__github__*` call below — do not hardcode them.
+Read `.claude/project.md` first. It has YAML frontmatter (`owner`, `repo`, `context_doc`, `reviewers`, `project_board`) and markdown sections (`## Scope`, `## Review checklist`, `## How to test`, plus the optional `## Design checklist`, `## Discoverability checklist` and `## Stack notes`). Use `owner`/`repo` from its frontmatter in every `mcp__github__*` call below — do not hardcode them.
 
 The goal is an issue with **exactly the right amount of detail** — enough that an agent running `/cr:ship-issue` can implement it correctly without guessing, but not so much that it over-specifies the solution or invents requirements the user never asked for. Match the level of detail to the size of the change.
 

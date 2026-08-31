@@ -229,7 +229,8 @@ any open product questions that should block silent assumptions>
 <project-specific bullets /cr:code-review checks for, beyond the generic dimensions>
 
 ## Design checklist
-<project-specific bullets /cr:frontend-design-audit checks for>
+<optional — project-specific bullets /cr:frontend-design-audit checks for. A repo
+with no UI omits it; the audit is not something you would run there anyway.>
 
 ## Discoverability checklist
 <optional — project-specific bullets about the public surface: which files list

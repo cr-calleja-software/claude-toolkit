@@ -58,10 +58,9 @@ Prompt files are the product here, so they fail in ways ordinary code doesn't:
 - Body text drifting from the house voice: imperative, short bullets, no
   preamble, no comment that only restates what the line does
 
-Shell scripts (`bootstrap/`, `scripts/`) must hold to the bash 3.2 floor and the
-invariants in `CLAUDE.md` — no bash 4+ syntax, no heredoc inside `$(...)`, and
-for `bootstrap/session-start.sh` specifically: never write to a consuming repo's
-`settings.json`, never fail a session. Also:
+Shell scripts (`bootstrap/`, `scripts/`) must hold to the invariants in
+`CLAUDE.md` — that list is canonical and has grown since it was written, so check
+it there rather than against a summary. What it does not name:
 
 - A `die`-style helper called inside `$(...)`, where its exit only ends the
   subshell and the caller reads an empty result as a real answer

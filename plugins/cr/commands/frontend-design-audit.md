@@ -8,7 +8,7 @@ UI/UX design audit for any frontend change. Run this **automatically after imple
 
 > **When to invoke:** Any time frontend code is written or modified (components, pages, styling, layout). Also available on demand as `/cr:frontend-design-audit`.
 >
-> **Config:** this command reads `.claude/project.md` at the repo root for `owner`/`repo` and the project-specific `## Design checklist`. If that file is missing, stop and tell the user it needs to exist before this command can run.
+> **Config:** this command reads `.claude/project.md` at the repo root for `owner`/`repo` and the optional project-specific `## Design checklist`. If that file is missing, stop and tell the user it needs to exist before this command can run. A missing `## Design checklist` **section** is not that case — run the generic checks and say nothing about it.
 
 ## Usage
 
@@ -92,7 +92,7 @@ Evaluate the interface across the following dimensions. Assess **both mobile (~3
 
 ### Project-specific checks
 
-Pull these from `project.md`'s `## Design checklist` section — e.g. mutually-exclusive selection states, content-visibility/precision rules, empty-state tone, specific component treatments. Check every bullet listed there against the changed files.
+Pull these from `project.md`'s `## Design checklist` section — e.g. mutually-exclusive selection states, content-visibility/precision rules, empty-state tone, specific component treatments. Check every bullet listed there against the changed files. Skip this section entirely if the project has none.
 
 ---
 
