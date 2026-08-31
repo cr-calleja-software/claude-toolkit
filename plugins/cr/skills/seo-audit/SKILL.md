@@ -163,8 +163,8 @@ weighed against effort.
 
 | # | Improvement | Impact | Effort | Why |
 |---|-------------|--------|--------|-----|
-| 1 | ... | High | Med | ... |
-| 2 | Add `/contact` to `app/sitemap.ts` — **project rule** | High | Low | ... |
+| 1 | Add `/contact` to `app/sitemap.ts` — **project rule** | High | Low | ... |
+| 2 | ... | High | Med | ... |
 
 ## Suggested next step
 One line, e.g. "File the high-impact items with /cr:create-issue."
