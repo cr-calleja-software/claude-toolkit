@@ -80,6 +80,7 @@ carry no version, so there is nothing there to update.
 - `README.md`, this file, and anything else at the repo root
 - `bootstrap/session-start.sh`
 - `scripts/` — repo tooling, never shipped to consumers
+- `.claude/` — this repo's own config for working in it, same as any consumer's
 
 `bootstrap/` is not part of the plugin: each consuming repo holds its own
 copied version at `.claude/hooks/session-start.sh`, so a change here does not
