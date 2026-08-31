@@ -153,6 +153,7 @@ real file or its absence. Example:
 - ✅ Root title + description + OG image (`app/layout.tsx:28`)
 - ❌ Entity pages have no per-entity `generateMetadata` — all share the root
   title/description (`app/<entity>/[id]/page.tsx`)
+### Crawlability
 - ❌ `/contact` is listed in `llms.txt` but missing from `app/sitemap.ts`
   — **project rule**
 
@@ -163,7 +164,7 @@ weighed against effort.
 | # | Improvement | Impact | Effort | Why |
 |---|-------------|--------|--------|-----|
 | 1 | ... | High | Med | ... |
-| 2 | ... | ... | ... | ... |
+| 2 | Add `/contact` to `app/sitemap.ts` — **project rule** | High | Low | ... |
 
 ## Suggested next step
 One line, e.g. "File the high-impact items with /cr:create-issue."
@@ -176,8 +177,9 @@ the skill checks everywhere. Both are real findings; they carry different weight
 Use High / Medium / Low for both Impact and Effort. Order the table by impact,
 then by lowest effort. Keep the "Why" to one line — concrete, tied to this app.
 A **project rule** is a stated policy rather than advice, so rank it at least as
-high as an equivalent generic finding, and say in "Why" that the project asked
-for it.
+high as an equivalent generic finding, say in "Why" that the project asked for
+it, and tag the row as well as the *State of play* line — the table is the half
+someone acts on, and it should be scannable without reading every "Why".
 
 ## Notes
 

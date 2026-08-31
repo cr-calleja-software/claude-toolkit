@@ -234,10 +234,9 @@ any open product questions that should block silent assumptions>
 ## Discoverability checklist
 <optional — project-specific bullets about the public surface: which files list
 public routes, which pages need structured data, which generated artefacts must
-stay in sync. /cr:code-review's section 8 and /cr:ship-issue's Step 4.6 apply
-them when a change touches that surface; the seo-audit skill applies them to the
-whole project. Omit it and all three still run on their generic bullets, so a
-repo without this section behaves exactly as before.>
+stay in sync. The commands and the audit skill that read this section say where
+and when they apply it. Omit it and they all still run on their generic bullets,
+so a repo without this section behaves exactly as before.>
 
 ## How to test
 <boilerplate steps /cr:ship-issue puts at the top of a PR's "How to test" section>
