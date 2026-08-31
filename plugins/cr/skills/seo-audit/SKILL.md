@@ -32,6 +32,14 @@ what structured-data types and per-entity pages this app should have (e.g. an
 source). If `project.md` is missing, stop and tell the user it needs to exist
 before this skill can run.
 
+Also read its **optional** `## Discoverability checklist`, if present — the
+surfaces only that repo can name (which files list its public routes, which
+pages need structured data, which generated artefacts must stay in sync). This
+is the same section `/cr:code-review`'s section 8 and `/cr:ship-issue`'s Step 4.6
+read; here it applies to the whole project rather than one diff. The section
+being absent is **not** the missing-file case above and never blocks the audit —
+see *Notes*.
+
 ## Ground rules
 
 **This skill is read-only.** Audit and recommend only. Do not edit app code, do
@@ -48,6 +56,13 @@ Work through the six areas below. For each, inspect the relevant files and decid
 the status: ✅ present and correct / ⚠️ present but needs improvement / ❌ missing.
 Favour the dedicated search/read tools (Glob, Grep, Read) — this is a fast scan,
 not a build.
+
+Bullets from `project.md`'s `## Discoverability checklist` cut **across** these
+areas rather than belonging to one. Most will land in *2. Crawlability* or
+*5. AI/LLM discoverability*, but a repo is free to write one about structured
+data or metadata, so check each against the area it actually concerns. Every one
+of them is in scope for this audit — unlike the per-diff gate in
+`/cr:ship-issue`, a whole-project audit has no reason to skip any.
 
 ### 1. Metadata
 
@@ -138,6 +153,9 @@ real file or its absence. Example:
 - ✅ Root title + description + OG image (`app/layout.tsx:28`)
 - ❌ Entity pages have no per-entity `generateMetadata` — all share the root
   title/description (`app/<entity>/[id]/page.tsx`)
+### Crawlability
+- ❌ `/contact` is listed in `llms.txt` but missing from `app/sitemap.ts`
+  — **project rule**
 
 ## Prioritised improvements
 A ranked table — highest impact first. Impact = effect on traffic/discoverability
@@ -145,19 +163,31 @@ weighed against effort.
 
 | # | Improvement | Impact | Effort | Why |
 |---|-------------|--------|--------|-----|
-| 1 | ... | High | Med | ... |
-| 2 | ... | ... | ... | ... |
+| 1 | Add `/contact` to `app/sitemap.ts` — **project rule** | High | Low | ... |
+| 2 | ... | High | Med | ... |
 
 ## Suggested next step
 One line, e.g. "File the high-impact items with /cr:create-issue."
 ```
 
+Tag any finding that comes from `project.md`'s `## Discoverability checklist`
+with **project rule**, so a reader can tell what this repo has declared from what
+the skill checks everywhere. Both are real findings; they carry different weight.
+
 Use High / Medium / Low for both Impact and Effort. Order the table by impact,
 then by lowest effort. Keep the "Why" to one line — concrete, tied to this app.
+A **project rule** is a stated policy rather than advice, so rank it at least as
+high as an equivalent generic finding, say in "Why" that the project asked for
+it, and tag the row as well as the *State of play* line — the table is the half
+someone acts on, and it should be scannable without reading every "Why".
 
 ## Notes
 
 - Don't invent gaps to pad the list. If an area is genuinely solid, say so with ✅
   and move on — a short honest audit beats a long speculative one.
+- **A missing `## Discoverability checklist` is never itself a finding.** The
+  section is optional; when it is absent, audit exactly as described above and
+  say nothing about it. Do not suggest adding one — that is the user's call, not
+  an SEO gap.
 - If you find an existing tracking issue/epic for a gap, note it next to the
   finding so the user doesn't double-file.
