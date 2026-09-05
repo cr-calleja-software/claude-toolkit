@@ -155,8 +155,27 @@ chmod +x /tmp/shim/git
 PATH=/tmp/shim:$PATH scripts/release-tag.sh --check   # must exit 1, never 2
 ```
 
-Exit 2 there would be a false "this release is untagged" on a version that is
-tagged — the one answer the script must never give. This has been got wrong
+`.github/workflows/release-tag.yml` now runs this script on every push to
+`main`, so a change to it can break releases without anyone typing the command.
+Exercise both halves of the tagging path — the built-in manifest check and the
+CLI one — against a throwaway remote rather than the real one:
+
+```bash
+git init --bare /tmp/rel/remote.git && git clone /tmp/rel/remote.git /tmp/rel/work
+# copy the tree in, commit on main, push, then:
+scripts/release-tag.sh --check                 # 2, untagged
+env PATH=/usr/bin:/bin scripts/release-tag.sh --yes             # 1, no claude CLI
+env PATH=/usr/bin:/bin scripts/release-tag.sh --yes --no-cli-check   # 0, tags
+scripts/release-tag.sh --check                 # 0, tagged
+scripts/release-tag.sh --yes --no-cli-check    # 1, refuses to duplicate
+```
+
+Point the marketplace entry's `source` somewhere else and confirm both the
+`--no-cli-check` and the default path refuse before any tag is created — a tag
+cut while the manifests disagree names a release consumers cannot resolve.
+
+Exit 2 from `--check` would be a false "this release is untagged" on a version
+that is tagged — the one answer the script must never give. This has been got wrong
 once: a helper that called `die` on an unreachable remote, invoked as
 `$(helper)`, only killed the substitution's subshell while the caller carried on
 with an empty result. A function used in `$(...)` can signal failure only
@@ -180,6 +199,18 @@ distribution mechanism; nothing waits on one.
 Tag after the merge, from `main`, never from a PR branch — a tag cut on the
 branch would point at a pre-merge commit that is not what consumers install.
 
+**The tag is cut for you.** `.github/workflows/release-tag.yml` runs on every
+push to `main` and does exactly this: `scripts/release-tag.sh --check` first,
+then the tagging path only when `--check` says the released version is untagged.
+A merge that does not bump the version is a green no-op; a `--check` that cannot
+reach the remote fails the run rather than passing as "nothing to do". Nothing
+about the tag name, the guards or the exit codes lives in the workflow — it
+decides when to call the script and what its answers mean, and that is all.
+
+So the normal path is: merge, then read the run. Tag by hand when the workflow
+could not — it is the same command it runs, and it stays the way to tag a
+release from a terminal:
+
 ```bash
 git checkout main && git pull
 scripts/release-tag.sh                     # dry-run, confirm, tag, push, verify
@@ -191,10 +222,17 @@ tag already on the remote each abort with what to do instead. `--yes` skips only
 the confirmation prompt, never those checks. It takes a plugin directory
 (default `plugins/cr`), so a second plugin needs no change to it.
 
-Because nothing depends on the tag, this is the step that gets skipped — it
-happened to `0.3.1`, whose tag was missed outright with nothing to surface it.
-Run `scripts/release-tag.sh --check` to see whether the version on `main` is
-tagged. It reads the version from `origin/main` rather than your working tree —
+`--no-cli-check` exists for the runner, which has no `claude` CLI: it waives
+`claude plugin tag --dry-run` and nothing else. The script's own manifest check —
+that `marketplace.json` carries an entry for this plugin, pointing at the
+directory whose version is about to be tagged — runs on **every** tagging path,
+so there is no route to a tag without one. Don't pass it from a terminal, where
+you have the CLI and the fuller check costs nothing.
+
+Because nothing depends on the tag, this used to be the step that got skipped —
+it happened to `0.3.1`, whose tag was missed outright with nothing to surface it.
+That is what the workflow above is for. Run `scripts/release-tag.sh --check`
+yourself to see whether the version on `main` is tagged. It reads the version from `origin/main` rather than your working tree —
 on any branch here the tree is already bumped past what is released — and needs
 only `git` and `python3`, so it runs on a CI box without the `claude` CLI. Exit
 `0` tagged, `2` untagged, `1` if anything went wrong, so a job can tell a real
