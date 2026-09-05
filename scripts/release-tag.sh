@@ -9,6 +9,11 @@
 # command, and `--check` reports drift so a missed tag is findable rather than
 # invisible — deliberately by asking the remote, never by trusting a note here.
 #
+# .github/workflows/release-tag.yml runs it on every push to main, so the tag now
+# lands without anyone remembering: --check first, then the tagging path only when
+# --check reports the released version untagged. Running it by hand is unchanged,
+# and stays the way to tag a release the workflow could not.
+#
 # TAG FORMAT
 # Tags are v<version> — v0.4.0. `claude plugin tag` can only produce its own
 # {name}--v{version} form with no way to override it, so this script runs that
@@ -29,7 +34,7 @@
 #     patch version so anyone who read the old tag still sees what it pointed at
 #
 # USAGE
-#   scripts/release-tag.sh [--check] [--yes] [<plugin-dir>]
+#   scripts/release-tag.sh [--check] [--yes] [--no-cli-check] [<plugin-dir>]
 #
 #   --check   report whether the version on main is already tagged, then exit.
 #             Reads the version from origin/main, not the working tree — on a
@@ -38,6 +43,12 @@
 #             and needs only git and python3, not the claude CLI.
 #   --yes     skip the confirmation prompt (for non-interactive use). It never
 #             skips a safety check — those refuse regardless.
+#   --no-cli-check
+#             do not require the claude CLI, and skip its `plugin tag --dry-run`.
+#             The built-in manifest check still runs — it runs on every tagging
+#             path, so no route to a tag is left without one. For CI runners,
+#             which have no claude CLI; from a terminal you have one, so do not
+#             pass this.
 #   <plugin-dir>  defaults to plugins/cr; giving two is an error
 #
 # EXIT CODES
@@ -56,6 +67,7 @@ set -uo pipefail
 PLUGIN_DIR="plugins/cr"
 CHECK_ONLY=""
 ASSUME_YES=""
+NO_CLI_CHECK=""
 
 die()  { echo "release-tag: $*" >&2; exit 1; }
 note() { echo "release-tag: $*"; }
@@ -64,6 +76,7 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --check) CHECK_ONLY=1 ;;
     --yes|-y) ASSUME_YES=1 ;;
+    --no-cli-check) NO_CLI_CHECK=1 ;;
     # Print the header block, stopping at the first non-comment line, so editing
     # the header can never leak code into --help or truncate the usage notes.
     -h|--help) awk 'NR>1 { if ($0 !~ /^#/) exit; sub(/^# ?/, ""); print }' "$0"; exit 0 ;;
@@ -81,6 +94,7 @@ REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" \
 cd "$REPO_ROOT" || die "could not enter $REPO_ROOT"
 
 MANIFEST="${PLUGIN_DIR}/.claude-plugin/plugin.json"
+MARKETPLACE=".claude-plugin/marketplace.json"
 
 # Name then version, one per line. Takes a path, or - for stdin.
 read_meta() {
@@ -120,6 +134,63 @@ remote_tag_for_version() {
     | sed -n 1p
 }
 
+# Does the catalogue actually carry this plugin, at the directory whose version we
+# are about to name? A tag cut while plugin.json and the marketplace entry
+# disagree names a release consumers cannot resolve.
+#
+# `claude plugin tag --dry-run` is the richer answer and stays the default, but it
+# needs the claude CLI, which a CI runner has not got. This is the part of it that
+# has to hold before a tag is created, in git and python3 alone, so the tagging
+# path can run somewhere the CLI does not.
+#
+# The program is `python3 -c` with a single-quoted, apostrophe-free body rather
+# than a heredoc — the bash 3.2 rule at the foot of this header, kept even where
+# no $(...) is in sight so reintroducing one later cannot be fatal. It reports by
+# exit status, so callers use it as a plain command, never inside $(...).
+manifest_check() {
+  python3 -c '
+import json, os, sys
+
+mkt, man, pdir = sys.argv[1], sys.argv[2], sys.argv[3]
+
+def die(msg):
+    sys.stderr.write("release-tag: " + msg + "\n")
+    raise SystemExit(1)
+
+def load(path):
+    try:
+        with open(path) as fh:
+            return json.load(fh)
+    except Exception as err:
+        die("could not read " + path + ": " + str(err))
+
+market = load(mkt)
+plugin = load(man)
+
+name = plugin.get("name")
+version = plugin.get("version")
+
+entries = [e for e in (market.get("plugins") or [])
+           if isinstance(e, dict) and e.get("name") == name]
+if not entries:
+    die(mkt + " has no entry named " + repr(name) + " -- the plugin is not in the catalogue this repo publishes")
+if len(entries) > 1:
+    die(mkt + " has " + str(len(entries)) + " entries named " + repr(name))
+
+entry = entries[0]
+source = entry.get("source")
+if not isinstance(source, str):
+    die("the " + repr(name) + " marketplace entry has no string source")
+if os.path.realpath(source) != os.path.realpath(pdir):
+    die("the " + repr(name) + " marketplace entry points at " + source + ", not " + pdir)
+
+# Entries carry no version today. If one ever does, it has to agree.
+declared = entry.get("version")
+if declared is not None and declared != version:
+    die("the " + repr(name) + " marketplace entry says version " + repr(declared) + ", plugin.json says " + repr(version))
+' "$MARKETPLACE" "$MANIFEST" "$PLUGIN_DIR"
+}
+
 # --check answers "is the released version tagged?", so it reads the version from
 # origin/main — not the working tree, which on any branch here has already been
 # bumped past what is released. Exit 0 tagged, 2 untagged, 1 anything went wrong,
@@ -146,7 +217,8 @@ if [ -n "$CHECK_ONLY" ]; then
   exit 2
 fi
 
-command -v claude >/dev/null 2>&1 || die "the claude CLI is not on PATH"
+[ -n "$NO_CLI_CHECK" ] || command -v claude >/dev/null 2>&1 \
+  || die "the claude CLI is not on PATH. Install it, or pass --no-cli-check to tag without it — the built-in manifest check runs either way (that is what CI does)"
 
 [ -f "$MANIFEST" ] || die "no plugin manifest at $MANIFEST"
 
@@ -189,14 +261,23 @@ note "tag:     $TAG"
 note "commit:  $(git rev-parse --short HEAD) $(git log -1 --pretty=%s)"
 echo
 
-# Run the CLI's tag command as a dry run purely for its manifest check — it
-# confirms plugin.json and the enclosing marketplace entry agree. Its output
-# names a {name}--v{version} tag we do not use, so surface it only on failure.
-if ! CLI_CHECK="$(claude plugin tag "$PLUGIN_DIR" --dry-run 2>&1)"; then
+# Unconditional: every path to a tag passes through this, --no-cli-check included.
+manifest_check || die "manifest check failed; not tagging"
+note "manifest check passed (the $NAME entry in $MARKETPLACE resolves to $PLUGIN_DIR)"
+
+# The CLI's tag command, as a dry run, is the fuller check layered on top — it
+# validates both manifests, not just the one relationship above. Its output names
+# a {name}--v{version} tag we do not use, so surface it only on failure. This is
+# the only check --no-cli-check waives, and it is waived because a runner has no
+# claude CLI, never to get past a failing one.
+if [ -n "$NO_CLI_CHECK" ]; then
+  note "skipped the claude CLI manifest check (--no-cli-check)"
+elif ! CLI_CHECK="$(claude plugin tag "$PLUGIN_DIR" --dry-run 2>&1)"; then
   printf '%s\n' "$CLI_CHECK" >&2
   die "manifest check failed; not tagging"
+else
+  note "claude CLI manifest check passed (plugin.json agrees with the marketplace entry)"
 fi
-note "manifest check passed (plugin.json agrees with the marketplace entry)"
 
 git rev-parse -q --verify "refs/tags/$TAG" >/dev/null 2>&1 \
   && die "$TAG already exists locally but not on the remote — delete it with 'git tag -d $TAG' if it was a mistake, then re-run"

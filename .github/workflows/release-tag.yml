@@ -1,0 +1,77 @@
+# Tag the release when it merges.
+#
+# Merging to main is the release — consumers install from the default branch and
+# never see a tag — which makes tagging the one step nothing depends on, and so
+# the one that gets skipped. It happened to 0.3.1, whose tag was missed outright
+# with nothing anywhere to surface it. This runs the same scripts/release-tag.sh
+# a human would, on every push to main, so remembering is no longer the mechanism.
+#
+# It is deliberately not a tagger of its own: all the guards, the exit-code
+# contract and the tag name live in the script, and this file only decides when to
+# call it and what its answers mean.
+name: Release tag
+
+on:
+  push:
+    branches: [main]
+
+# Pushing a tag is a write to the repository. Nothing else here needs more.
+permissions:
+  contents: write
+
+# Two merges landing close together must not race for the same tag. Never cancel
+# a run in flight — it may be between `git tag` and `git push`.
+concurrency:
+  group: release-tag
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          # release-tag.sh refuses when HEAD is not main, and a push event checks
+          # out a detached HEAD by default, where git rev-parse --abbrev-ref HEAD
+          # prints "HEAD". Naming the branch gives the script the checkout its
+          # guards are written for, rather than working around them.
+          ref: main
+          # It compares HEAD against origin/main and reads tags from the remote.
+          fetch-depth: 0
+
+      - name: Identify the tagger
+        # git tag -a needs a committer identity, and a runner has none.
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Tag main's version if it is not tagged already
+        # --check reports on origin/main and creates nothing: 0 tagged, 2 untagged,
+        # 1 it could not tell. That third case is why this asks first rather than
+        # tagging and hoping — an unreachable remote must fail the run, never pass
+        # as "nothing to do". Most pushes here do not bump the version, so 0 is the
+        # normal answer and has to be a clean green no-op.
+        run: |
+          status=0
+          scripts/release-tag.sh --check || status=$?
+
+          case "$status" in
+            0)
+              echo "The version on main is already tagged; nothing to do."
+              exit 0
+              ;;
+            2)
+              echo "The version on main is untagged; tagging it."
+              ;;
+            *)
+              echo "release-tag.sh --check exited $status: it could not tell whether" >&2
+              echo "the release is tagged. Failing rather than guessing." >&2
+              exit 1
+              ;;
+          esac
+
+          # --yes skips only the confirmation prompt; every safety check still
+          # refuses. --no-cli-check waives the claude CLI check alone, which no
+          # runner can run — the script's own manifest check runs regardless.
+          scripts/release-tag.sh --yes --no-cli-check

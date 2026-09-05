@@ -317,7 +317,14 @@ agent working in this repo reads automatically.
 repo tracks the default branch, so consumers get `main`'s HEAD and never a tag.
 Tags are a record and a rollback reference; nothing waits on one.
 
-Tag from `main` after the merge, never from a PR branch:
+`.github/workflows/release-tag.yml` tags it for you: on every push to `main` it
+runs `scripts/release-tag.sh --check`, and cuts the tag only when that reports
+the released version untagged. A merge that doesn't bump the version is a green
+no-op; a check that can't reach the remote fails the run rather than passing as
+"nothing to do".
+
+Tag by hand when the workflow couldn't — from `main` after the merge, never from
+a PR branch:
 
 ```bash
 git checkout main && git pull
@@ -326,9 +333,10 @@ scripts/release-tag.sh --check  # is the version on origin/main tagged? 0 yes, 2
 ```
 
 The script is the flow in `CLAUDE.md` with guards — it refuses off `main`, on a
-stale or dirty tree, or when the tag is already published. Since nothing
-depends on the tag it is easy to skip — it happened to `0.3.1` — so `--check`
-exists to make a missed one visible.
+stale or dirty tree, or when the tag is already published, and the workflow calls
+that same script rather than reimplementing any of it. Since nothing depends on
+the tag it used to be easy to skip — it happened to `0.3.1` — which is why
+`--check` makes a missed one visible and why the workflow exists at all.
 
 Tags are named `v<version>` (`v0.4.0`). The two published before that,
 `cr--v0.3.0` and `cr--v0.3.1`, keep their old `{name}--v{version}` name — the
