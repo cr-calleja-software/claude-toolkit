@@ -44,7 +44,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out main
-        uses: actions/checkout@v4
+        # v7 runs on node24. v4 targets node20, which GitHub has deprecated and
+        # already force-runs on 24 with a warning. Tracking the major tag rather
+        # than a pinned SHA: this is a first-party action, and a pin here would
+        # rot silently with no Dependabot in the repo to move it.
+        uses: actions/checkout@v7
         with:
           # release-tag.sh refuses when HEAD is not main, and a push event checks
           # out a detached HEAD by default, where git rev-parse --abbrev-ref HEAD
