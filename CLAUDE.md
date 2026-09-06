@@ -207,9 +207,18 @@ reach the remote fails the run rather than passing as "nothing to do". Nothing
 about the tag name, the guards or the exit codes lives in the workflow — it
 decides when to call the script and what its answers mean, and that is all.
 
-So the normal path is: merge, then read the run. Tag by hand when the workflow
-could not — it is the same command it runs, and it stays the way to tag a
-release from a terminal:
+The workflow also takes a `workflow_dispatch`, for re-running it after a run
+that could not finish — a blocked push, a network blip — without an empty
+commit. It always tags `main`, whatever ref you dispatch from. Its optional
+`expect_version` input asserts and never overrides: give it the version you
+believe you are releasing and the run stops if `main` has moved on under you.
+There is deliberately no way to hand it a version to tag. The tag has to name
+what consumers resolve from `main`, so releasing a different version means
+bumping `plugin.json` in a PR and merging — the same as always.
+
+So the normal path is: merge, then read the run. Tag by hand when neither the
+push nor the button could — it is the same command they run, and it stays the
+way to tag a release from a terminal:
 
 ```bash
 git checkout main && git pull

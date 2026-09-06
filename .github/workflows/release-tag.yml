@@ -15,6 +15,20 @@ on:
   push:
     branches: [main]
 
+  # For re-running after a failed run — a blocked push, a network blip — without
+  # an empty commit. It always tags main, whatever ref you dispatch from, because
+  # the checkout below names main explicitly.
+  workflow_dispatch:
+    inputs:
+      expect_version:
+        description: >-
+          Optional: the version you expect main to be at (e.g. 0.6.1). Blank tags
+          whatever main declares. This asserts, it never overrides — a tag has to
+          name the version consumers resolve from main, or it names a release they
+          cannot install. To release a different version, bump plugin.json in a PR.
+        required: false
+        type: string
+
 # Pushing a tag is a write to the repository. Nothing else here needs more.
 permissions:
   contents: write
@@ -45,6 +59,26 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Check main against the version you expected
+        # Only a manual run can disagree with main: whoever presses the button has
+        # a version in mind, and someone else may have merged since. Say so and
+        # stop, rather than tagging a release they did not mean.
+        if: github.event_name == 'workflow_dispatch' && inputs.expect_version != ''
+        # Through the environment, never interpolated into the script: ${{ }} in a
+        # run body is substituted before bash sees it, so a crafted input would be
+        # executed rather than compared.
+        env:
+          EXPECT_VERSION: ${{ inputs.expect_version }}
+        run: |
+          declared="$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["version"])' \
+            plugins/cr/.claude-plugin/plugin.json)"
+          if [ "$declared" != "$EXPECT_VERSION" ]; then
+            echo "main declares $declared, you expected $EXPECT_VERSION. Nothing tagged." >&2
+            echo "To release $EXPECT_VERSION, bump plugin.json to it in a PR and merge." >&2
+            exit 1
+          fi
+          echo "main declares $declared, as expected."
 
       - name: Tag main's version if it is not tagged already
         # --check reports on origin/main and creates nothing: 0 tagged, 2 untagged,

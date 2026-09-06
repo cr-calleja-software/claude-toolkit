@@ -323,8 +323,13 @@ the released version untagged. A merge that doesn't bump the version is a green
 no-op; a check that can't reach the remote fails the run rather than passing as
 "nothing to do".
 
-Tag by hand when the workflow couldn't — from `main` after the merge, never from
-a PR branch:
+It also takes a manual `workflow_dispatch`, to re-run after a run that couldn't
+finish. Its optional `expect_version` input is an assertion, not an override —
+it stops the run if `main` isn't at the version you expected. Releasing a
+different version always means bumping `plugin.json` in a PR.
+
+Tag by hand when neither could — from `main` after the merge, never from a PR
+branch:
 
 ```bash
 git checkout main && git pull
