@@ -11,8 +11,8 @@ contract. This file covers the rules that apply to **every change**.
 
 ## Versioning is mandatory
 
-**Every change under `plugins/cr/` bumps `version` in
-`plugins/cr/.claude-plugin/plugin.json`, in the same commit as the change.**
+**Every PR bumps `version` in `plugins/cr/.claude-plugin/plugin.json`, in the
+same commit as the change — whether or not it touches `plugins/cr/`.**
 
 Never leave the bump for a reviewer or a follow-up commit — an unbumped change
 is indistinguishable, to a consuming repo, from no change at all. Bump exactly
@@ -57,6 +57,8 @@ same PR round, and say so in the PR body.
 - Clarifying an instruction that was ambiguous but already meant this
 - Fixing a bug so a command does what it was always documented to do
 - Editing a `description` for accuracy without meaning to change when it fires
+- A change that ships no plugin content at all — see *What can only ever be
+  PATCH* below
 
 If you cannot decide between two levels, take the higher one. An over-bump
 costs nothing; an under-bump means a consumer keeps a stale plugin and nobody
@@ -75,16 +77,40 @@ plugin's version:
 A plugin version bump alone does **not** touch `marketplace.json` — entries
 carry no version, so there is nothing there to update.
 
-## What bumps nothing
+## What can only ever be PATCH
+
+Nothing here is exempt from the bump. These paths ship no plugin content, so
+they can never justify more than a patch — but they still take one:
 
 - `README.md`, this file, and anything else at the repo root
+- `.github/` — CI workflows
 - `bootstrap/session-start.sh`
-- `scripts/` — repo tooling, never shipped to consumers
+- `scripts/` — repo tooling
+
+**Why bump for a change consumers cannot receive.** Not because it unblocks
+delivery — it doesn't. A consumer on the previous version picks up the next
+real change just as readily whether or not this patch existed; version-gating
+compares versions, it doesn't require them to be contiguous. It buys two other
+things:
+
+- **Every commit on `main` is a named release.** The workflow tags each one, so
+  the tag history mirrors `main` one-to-one and any state of the repo has a
+  version to roll back to and a name to refer to. Merges no longer collapse
+  into whichever version happened to be current.
+- **It removes the judgement call, and with it the under-bump.** "Does this one
+  need a bump?" is the question that produced stale consumers before, and the
+  rule at the top of this section calls the under-bump the failure nobody
+  notices until a command misbehaves. Always-bump has no wrong answer to get wrong.
+
+The cost, stated plainly so nobody rediscovers it as a defect: consumers will
+sometimes update to a version whose plugin content is byte-identical to the
+last. The version means *a release happened*, not *the plugin changed*. Read
+the diff, not the number, to know what changed.
 
 `bootstrap/` is not part of the plugin: each consuming repo holds its own
 copied version at `.claude/hooks/session-start.sh`, so a change here does not
 reach them through a plugin update. When you change it, say so explicitly in
-the PR body and list the repos that need to re-copy the file — a version bump
+the PR body and list the repos that need to re-copy the file — the patch bump
 cannot do that job for you.
 
 ## Editing bootstrap/session-start.sh
