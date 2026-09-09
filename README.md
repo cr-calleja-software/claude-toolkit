@@ -1,8 +1,8 @@
 # claude-toolkit
 
 Shared Claude Code commands + skills for cr-calleja-software projects, distributed
-as a plugin marketplace so `festa-tracker`, `good-news`, `lanca-mt` (and future
-repos) stop copy-pasting `.claude/commands/*.md`.
+as a plugin marketplace so cr-calleja-software repos stop copy-pasting
+`.claude/commands/*.md`.
 
 The repo is **public**. Nothing repo-specific lives here — every command and
 skill reads the consuming repo's `.claude/project.md` instead — so publishing it
@@ -61,7 +61,8 @@ claude plugin marketplace list   # should list "claude-toolkit"
 
 ## Set up a project to use this toolkit
 
-Run these from inside the **consuming** repo (e.g. `good-news`), not this one.
+Run these from inside the **consuming** repo (a cr-calleja-software project),
+not this one.
 
 1. **Write `.claude/project.md`** at that repo's root — see the contract
    below. Every command in this plugin reads it; nothing works without it.
@@ -209,7 +210,7 @@ duplicated verbatim across repos.
 ```yaml
 ---
 owner: cr-calleja-software        # GitHub org/user
-repo: good-news                   # repo name
+repo: my-app                      # repo name
 context_doc: AGENTS.md            # file (or [list]) to read for stack/data-model/conventions
 reviewers: [ryancalleja, ccalleja] # exactly two — the PR-author/counterpart pair; reviewers[0] is the default/lead
 project_board:                    # omit this whole key if there's no board
@@ -274,10 +275,10 @@ project-specific fact goes anyway.
 3. **Bump `version` in `plugins/cr/.claude-plugin/plugin.json`, in the same
    commit** — see [Versioning](#versioning) below. This is not optional: an
    unbumped change is indistinguishable, to a consuming repo, from no change.
-4. **Test against a real consuming repo before merging**: `cd` into
-   `good-news` (or any repo with `.claude/project.md` and the plugin
-   enabled), start a new Claude Code session, and actually run the command
-   you changed. Command/skill file edits are picked up on the next session
+4. **Test against a real consuming repo before merging**: `cd` into a
+   cr-calleja-software project (any repo with `.claude/project.md` and the
+   plugin enabled), start a new Claude Code session, and actually run the
+   command you changed. Command/skill file edits are picked up on the next session
    automatically (local-path marketplace, no reinstall needed); if you
    changed `marketplace.json` or `plugin.json` (new plugin, rename, version
    bump), run `claude plugin marketplace update claude-toolkit` first, then
@@ -382,12 +383,11 @@ all the work happens in the new repo.
 
 ## Status
 
-- [x] Plugin scaffolded from `good-news`'s command files (most recently updated
-      across the three source repos as of 2026-08-08), folding in two things
-      `festa-tracker`/`lanca-mt` had that `good-news` didn't: robust `gh` CLI
-      failure handling in the project-board step, and the `seo-audit` →
-      `/cr:create-issue` cross-reference.
-- [x] Wrote `.claude/project.md` for `festa-tracker`, `good-news`, `lanca-mt`
+- [x] Plugin scaffolded from the most recently updated command files across
+      the three source repos as of 2026-08-08, folding in robust `gh` CLI
+      failure handling in the project-board step (present in some source repos
+      but not all), and the `seo-audit` → `/cr:create-issue` cross-reference.
+- [x] Wrote `.claude/project.md` for each cr-calleja-software project
 - [x] Renamed the plugin `personal-projects` → `cr` (shorter `/cr:` invocation
       prefix)
 - [x] Enabled the plugin in each project's `.claude/settings.json` (project
