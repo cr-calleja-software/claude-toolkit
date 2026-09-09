@@ -1,10 +1,9 @@
 # Working in claude-toolkit
 
 This repo is a Claude Code **plugin marketplace**, not an application. Its
-consumers are other repos (`good-news`, `festa-tracker`, `lanca-mt`) that
-install the `cr` plugin and get slash commands and skills from it. A change
-here ships to all of them, so the rules below are stricter than they would be
-in a normal repo.
+consumers are other cr-calleja-software project repos that install the `cr`
+plugin and get slash commands and skills from it. A change here ships to all
+of them, so the rules below are stricter than they would be in a normal repo.
 
 Read the README for what the plugin contains and the `.claude/project.md`
 contract. This file covers the rules that apply to **every change**.
