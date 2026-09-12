@@ -82,6 +82,8 @@ Describe WHAT is needed; suggest an approach only where it removes ambiguity, an
 <stack reminders or gotchas specific to this issue, from `project.md`. Keep short. Omit if nothing non-obvious.>
 ```
 
+Never use an em dash (—) anywhere in the draft, in any language — use a period, comma, colon, or parentheses instead. If the issue's requirements call for new user-facing copy, say so in a way that carries the rule forward: the implementer must generate that copy in all of the project's currently supported languages together (per `context_doc` / `project.md`), not just the primary one.
+
 Guidance on detail level:
 - **Bug fix:** Goal + steps to reproduce / current vs expected + acceptance criteria. Usually no Requirements section.
 - **Small enhancement:** Goal + a short Requirements list + acceptance criteria.
