@@ -87,6 +87,8 @@ Read all relevant files before editing. Follow the conventions in `context_doc` 
 - No comments unless the WHY is non-obvious
 - Mobile-first, matching whatever baseline viewport `project.md` specifies
 - Treat any prototype/reference-only markup called out in `context_doc` as design reference — never copy it into real app code
+- Never use an em dash (—) in generated content, copy, or text, in any language. Use a period, comma, colon, or parentheses instead.
+- When this issue adds or changes user-facing copy, generate it in all of the project's currently supported languages together, not just the primary one with translations deferred as follow-up work. Read the supported language list from `context_doc` / `project.md`; don't hardcode it here.
 
 Do the smallest implementation that fully satisfies the issue's acceptance criteria. Do not add unrequested features.
 
